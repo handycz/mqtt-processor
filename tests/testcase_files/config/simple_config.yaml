@@ -1,0 +1,4 @@
+processors:
+  - source: src/topic
+    sink: sink/topic
+    function: some_function
