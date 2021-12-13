@@ -17,6 +17,6 @@ RuleType = Callable[..., bool]
 ConverterType = Callable[..., Any]
 
 
-class ProcessorType(Enum):
+class ProcessorFunctionType(Enum):
     RULE = 1
     CONVERTER = 2

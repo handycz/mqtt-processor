@@ -3,7 +3,7 @@ from typing import Callable
 import pytest
 
 from src.mqttprocessor.processors import create_processor_register
-from src.mqttprocessor.definitions import ProcessorType
+from src.mqttprocessor.definitions import ProcessorFunctionType
 
 
 def test_rule_registration(rule: Callable):
@@ -98,10 +98,10 @@ def test_processor_register(converter: Callable, rule: Callable):
 
     actual = {name: proc.ptype for name, proc in create_processor_register().items()}
     expected = {
-        "c": ProcessorType.CONVERTER,
-        "c2": ProcessorType.CONVERTER,
-        "r": ProcessorType.RULE,
-        "r2": ProcessorType.RULE
+        "c": ProcessorFunctionType.CONVERTER,
+        "c2": ProcessorFunctionType.CONVERTER,
+        "r": ProcessorFunctionType.RULE,
+        "r2": ProcessorFunctionType.RULE
     }
 
     assert actual == expected
