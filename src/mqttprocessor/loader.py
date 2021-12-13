@@ -3,7 +3,9 @@ from typing import List, Optional, TextIO
 import pydantic
 import yaml
 
-TopicName = pydantic.constr(regex=r"^(\/?((({[^{}\/]+})|([^{}\/]+))+\/)+)|\/?((({[^{}\/]+})|([^{}\/]+))+)$")
+TopicName = pydantic.constr(
+    regex=r"^(?:\/?(?:(?:(?:{[^{}\/]+})|(?:[^{}\/]+))+\/?)+)\/?$"
+)
 
 
 class ProcessorConfig(pydantic.BaseModel):

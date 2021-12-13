@@ -1,0 +1,3 @@
+processors:
+  - source: src/topic
+    sink: sink/topic

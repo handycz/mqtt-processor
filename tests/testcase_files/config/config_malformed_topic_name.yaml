@@ -1,0 +1,4 @@
+processors:
+  - source: src/{w1}/topic/{W2[0]}}
+    sink: sink/topic
+    function: some_function

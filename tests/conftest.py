@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import TextIO
 
 import pytest
+from _pytest.fixtures import SubRequest
 
 import src.mqttprocessor.processors
 
@@ -22,7 +23,7 @@ def converter() -> type(src.mqttprocessor.processors.converter):
 
 
 @pytest.fixture(scope="function")
-def config_file_stream(filename: str) -> TextIO:
-    path = Path("testcase_files/config/" + filename)
+def config_file_stream(request: SubRequest) -> TextIO:
+    path = Path("testcase_files/config/" + request.param)
     with open(path, "r") as f:
         yield f

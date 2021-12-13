@@ -1,0 +1,3 @@
+processors:
+  - source: src/topic
+    function: some_function
