@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Union, Protocol, Type, TYPE_CHECKING, Any, Callable
 
+
 if TYPE_CHECKING:
     class JSONArray(list[JsonType], Protocol):  # type: ignore
         __class__: Type[list[JsonType]]  # type: ignore
