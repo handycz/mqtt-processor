@@ -1,0 +1,11 @@
+processors:
+  - source: src/topic
+    sink: sink/topic
+    function:
+      - name: basic_function1
+      - basic_function2
+      - name: expanded_function
+        arguments:
+          - 1
+          - arg2
+          - 3.0

@@ -15,7 +15,8 @@ from src.mqttprocessor.loader import load_config
         "config_multiple_source_topics.yaml",
         "config_multiple_functions.yaml",
         "config_missing_sink.yaml",
-        "config_complex_topic_name.yaml"
+        "config_complex_topic_name.yaml",
+        "config_expanded_function.yaml"
     ],
     indirect=True
 )
