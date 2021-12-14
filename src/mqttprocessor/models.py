@@ -24,18 +24,39 @@ class ProcessorConfigModel(pydantic.BaseModel):
     function: List[Union[FunctionNameModel, ExtendedFunctionModel]] | ExtendedFunctionModel | FunctionNameModel
 
     @pydantic.root_validator
-    def email_set_config(cls, values):
+    def function_set_config(cls, values):
+        if "function" not in values:
+            return values
+
+        function = values["function"]
+        if isinstance(function, list):
+            values["function"] = [cls._normalize_single_function(func) for func in function]
+        else:
+            values["function"] = [cls._normalize_single_function(function)]
+
+        return values
+
+    @classmethod
+    def _normalize_single_function(
+            cls, function: Union[FunctionNameModel, ExtendedFunctionModel]
+    ) -> ExtendedFunctionModel:
+        if isinstance(function, FunctionNameModel):
+            return ExtendedFunctionModel(name=function.__root__)
+        elif isinstance(function, ExtendedFunctionModel):
+            return function
+
+        raise ValueError("unknown function definition")
+
+    @pydantic.root_validator
+    def name_set_config(cls, values):
         name, function = values.get('name'), values.get('function')
         if name is not None:
             return values
 
-        if isinstance(function, list):
-            function = function[0]
-
-        if isinstance(function, FunctionNameModel):
-            function_name = function.__root__
+        if function is None:
+            function_name = "UnnamedFunction"
         else:
-            function_name = function.name.__root__
+            function_name = function[0].name.__root__
 
         values["name"] = function_name + str(uuid.uuid1().time_low)
         return values

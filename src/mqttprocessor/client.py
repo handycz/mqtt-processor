@@ -3,7 +3,7 @@ from typing import List
 
 from src.mqttprocessor.definitions import ProcessorFunctionType
 from src.mqttprocessor.messages import MultiMessage, TopicName, Message
-from src.mqttprocessor.models import ProcessorConfigModel
+from src.mqttprocessor.models import ProcessorConfigModel, FunctionNameModel
 from src.mqttprocessor.processors import ProcessorFunction
 
 
@@ -16,8 +16,12 @@ class Processor:
 
     def __init__(self, processor_config: ProcessorConfigModel):
         self._logger = logging.getLogger(__name__ + "=" + processor_config.name)
+        self._functions = self._create_functions(processor_config.function)
         # todo: verify function signature
         # todo: plug in config arguments to the functions
+        ...
+
+    def _create_functions(self, functions_config: FunctionNameModel) -> List[ProcessorFunction]:
         ...
 
     def process_message(self, source_topic: str, message: ...) -> List[Message]:
