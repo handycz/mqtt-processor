@@ -10,15 +10,15 @@ class TopicName(TopicNameModel):
         # todo: init regex for argument search and replace
         ...
 
-    def matches(self, topic_rule: str) -> bool:
+    def matches(self, topic_rule: 'TopicName') -> bool:
         ...
 
-    def compose_static_topic_name(self, from_topic: str) -> str:
+    def compose_static_topic_name(self, from_topic: 'TopicName') -> 'TopicName':
         ...
 
 
 class Message:
-    def __init__(self, sink_topic: str, message_body: ...):
+    def __init__(self, sink_topic: TopicName, message_body: ...):
         ...
     # todo: serialize-like function
 

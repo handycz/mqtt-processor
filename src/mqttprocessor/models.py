@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional, Any, Union
+from typing import List, Optional, Any, Union, Dict
 
 import pydantic
 
@@ -16,15 +16,22 @@ class ExtendedFunctionModel(pydantic.BaseModel):
     name: FunctionNameModel
     arguments: Optional[List[Any]]
 
+    @pydantic.root_validator(pre=True)
+    def args_set(cls, values):
+        if values.get("arguments", None) is None:
+            values["arguments"] = []
+
+        return values
+
 
 class ProcessorConfigModel(pydantic.BaseModel):
     name: Optional[str]
-    source: TopicNameModel | List[TopicNameModel]
+    source: List[TopicNameModel]
     sink: Optional[TopicNameModel]
-    function: List[Union[FunctionNameModel, ExtendedFunctionModel]] | ExtendedFunctionModel | FunctionNameModel
+    function: List[ExtendedFunctionModel]
 
-    @pydantic.root_validator
-    def function_set_config(cls, values):
+    @pydantic.root_validator(pre=True)
+    def unify_function_format(cls, values):
         if "function" not in values:
             return values
 
@@ -38,17 +45,25 @@ class ProcessorConfigModel(pydantic.BaseModel):
 
     @classmethod
     def _normalize_single_function(
-            cls, function: Union[FunctionNameModel, ExtendedFunctionModel]
-    ) -> ExtendedFunctionModel:
-        if isinstance(function, FunctionNameModel):
-            return ExtendedFunctionModel(name=function.__root__)
-        elif isinstance(function, ExtendedFunctionModel):
+            cls, function: str | Dict[str, Any]
+    ) -> Dict[str, Any]:
+        if isinstance(function, str):
+            return {"name": function}
+        else:
             return function
 
-        raise ValueError("unknown function definition")
+    @pydantic.root_validator(pre=True)
+    def source_to_list(cls, values):
+        if "source" not in values:
+            return values
+
+        if isinstance(values["source"], str):
+            values["source"] = [values["source"]]
+
+        return values
 
     @pydantic.root_validator
-    def name_set_config(cls, values):
+    def set_default_name(cls, values):
         name, function = values.get('name'), values.get('function')
         if name is not None:
             return values
