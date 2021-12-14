@@ -16,7 +16,8 @@ from src.mqttprocessor.loader import load_config
         "config_multiple_functions.yaml",
         "config_missing_sink.yaml",
         "config_complex_topic_name.yaml",
-        "config_expanded_function.yaml"
+        "config_expanded_function.yaml",
+        "config_simple_with_name.yaml"
     ],
     indirect=True
 )
@@ -36,5 +37,19 @@ def test_load_valid_config(config_file_stream: TextIO):
     indirect=True
 )
 def test_load_invalid_config(config_file_stream: TextIO):
-    with pytest.raises(ValidationError):
+    with pytest.raises((ValidationError, AttributeError)):
         load_config(config_file_stream)
+
+
+@pytest.mark.parametrize(
+    "config_file_stream,expected_name",
+    [
+        ("config_simple.yaml", "some_function"),
+        ("config_multiple_functions.yaml", "some_function"),
+        ("config_simple_with_name.yaml", "my-processor"),
+    ],
+    indirect=["config_file_stream"]
+)
+def test_load_function_name(config_file_stream: TextIO, expected_name: str):
+    config = load_config(config_file_stream)
+    assert config.processors[0].name[:len(expected_name)] == expected_name

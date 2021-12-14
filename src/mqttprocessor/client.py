@@ -3,16 +3,19 @@ from typing import List
 
 from src.mqttprocessor.definitions import ProcessorFunctionType
 from src.mqttprocessor.messages import MultiMessage, TopicName, Message
-from src.mqttprocessor.processors import ProcessorFunctionDefinition
+from src.mqttprocessor.models import ProcessorConfigModel
+from src.mqttprocessor.processors import ProcessorFunction
 
 
 class Processor:
+    __name__: str
     _logger: logging.Logger
     _topics: List[TopicName]
-    _functions: List[ProcessorFunctionDefinition]
+    _functions: List[ProcessorFunction]
     _sink_topic: TopicName
 
-    def __init__(self):
+    def __init__(self, processor_config: ProcessorConfigModel):
+        self._logger = logging.getLogger(__name__ + "=" + processor_config.name)
         # todo: verify function signature
         # todo: plug in config arguments to the functions
         ...

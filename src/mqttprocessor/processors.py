@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from functools import wraps
 from typing import Dict
 
-from .definitions import BodyType, RuleType, ConverterType, ProcessorFunctionType
+from .definitions import BodyType, RawRuleType, RawConverterType, ProcessorFunctionType, ConverterType, RuleType
 
 _REGISTERED_PROCESSORS: Dict[str, 'ProcessorFunctionDefinition'] = dict()
 
@@ -14,7 +14,7 @@ _logger = logging.getLogger(__name__)
 class ProcessorFunctionDefinition:
     name: str
     ptype: ProcessorFunctionType
-    callback: RuleType | ConverterType
+    callback: RawRuleType | RawConverterType
 
     def __eq__(self, other) -> bool:
         if other is None:
@@ -32,7 +32,13 @@ class ProcessorFunctionDefinition:
         return True
 
 
-def _register_processor(name: str, func: RuleType | ConverterType, ptype: ProcessorFunctionType):
+@dataclass(frozen=True)
+class ProcessorFunction:
+    ptype: ProcessorFunctionType
+    callback: RuleType | ConverterType
+
+
+def _register_processor(name: str, func: RawRuleType | RawConverterType, ptype: ProcessorFunctionType):
     _logger.info("Registering function %s", name)
     if name in _REGISTERED_PROCESSORS:
         _logger.error("Function '%s' already registered", name)

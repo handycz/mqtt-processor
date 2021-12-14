@@ -14,8 +14,11 @@ else:
     JsonType = Any
 
 BodyType = str | bytes | JsonType
-RuleType = Callable[..., bool]
-ConverterType = Callable[..., Any]
+RawRuleType = Callable[..., bool]
+RawConverterType = Callable[..., Any]
+
+RuleType = Callable[[Any], bool]
+ConverterType = Callable[[Any], Any]
 
 
 class ProcessorFunctionType(Enum):
