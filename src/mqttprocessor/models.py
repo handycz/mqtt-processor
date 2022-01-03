@@ -4,8 +4,11 @@ from typing import List, Optional, Any, Union, Dict
 import pydantic
 
 
+TOPIC_NAME_REGEX_PATTERN = r"^(?:\/?(?:(?:(?:{[^{}\/]+})|(?:[^{}\/]+))+\/?)+)\/?$"
+
+
 class TopicNameModel(pydantic.BaseModel):
-    __root__: pydantic.constr(regex=r"^(?:\/?(?:(?:(?:{[^{}\/]+})|(?:[^{}\/]+))+\/?)+)\/?$")
+    __root__: pydantic.constr(regex=TOPIC_NAME_REGEX_PATTERN)
 
 
 class FunctionNameModel(pydantic.BaseModel):
