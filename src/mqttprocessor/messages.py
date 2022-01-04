@@ -90,16 +90,38 @@ class TopicName:
 
         return self._regex_topic_name_extract.match(checked_topic_name) is not None
 
-    def compose_sink_topic_from_source(self, from_topic: 'TopicName') -> 'TopicName':
+    def compose_sink_topic_from_source(self, extract_from: 'TopicName', embed_into: 'TopicName') -> 'TopicName':
         if self._rule_is_static:
-            return TopicName(self._rule)
+            return embed_into
 
-        sink_topic = self._rule
-        groups = self._regex_topic_name_extract.search(from_topic.rule).groupdict()
+        search_result = self._regex_topic_name_extract.search(extract_from.rule)
+        if search_result is None:
+            raise ValueError("Topic `extract_from` does not match the template")
+
+        groups = search_result.groupdict()
+        sink_topic = embed_into.rule
         for group_id, value in groups.items():
             sink_topic = sink_topic.replace("{{{0}}}".format(group_id), value)
 
         return TopicName(sink_topic)
+
+    def __hash__(self):
+        return hash(self._rule) ^ hash(self._rule_is_static)
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, TopicName):
+            return False
+
+        if self._rule != other._rule:
+            return False
+
+        if self._rule_is_static != other._rule_is_static:
+            return False
+
+        return True
+
+    def __repr__(self) -> str:
+        return "TopicName(rule={0}, static={1})".format(self._rule, self._rule_is_static)
 
 
 class Message:
