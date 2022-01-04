@@ -123,7 +123,7 @@ class Processor:
         if multi_message.is_list:
             return [
                 Message(
-                    self._sink_topic.compose_static_topic_name(source_topic),
+                    self._sink_topic.compose_sink_topic_from_source(source_topic),
                     body
                 )
                 for body in multi_message.payload
@@ -131,7 +131,7 @@ class Processor:
         elif multi_message.is_dict:
             return [
                 Message(
-                    TopicName(sink_topic).compose_static_topic_name(source_topic),
+                    TopicName(sink_topic).compose_sink_topic_from_source(source_topic),
                     body
                 )
                 for sink_topic, body in multi_message.payload
@@ -151,6 +151,6 @@ class Processor:
             raise ValueError("Unknown sink topic")
 
         return Message(
-            sink_topic.compose_static_topic_name(source_topic),
+            sink_topic.compose_sink_topic_from_source(source_topic),
             body
         )

@@ -1,7 +1,21 @@
 import re
-from typing import Dict, Any, Iterable, Pattern, List
+from typing import Dict, Any, Iterable, Pattern, Set, List
 
 from src.mqttprocessor.models import TOPIC_NAME_REGEX_PATTERN
+
+
+class PatternGroupCreator:
+    _existing_groups: Set[str]
+
+    def __init__(self):
+        self._existing_groups = set()
+
+    def get_pattern(self, group_name: str, expected_pattern: str):
+        if group_name in self._existing_groups:
+            return "(?P={name})".format(name=group_name)
+        else:
+            self._existing_groups.add(group_name)
+            return "(?P<{name}>{pattern})".format(name=group_name, pattern=expected_pattern)
 
 
 class RegexPatternCreator:
@@ -9,43 +23,24 @@ class RegexPatternCreator:
     _MULTI_LEVEL_REGEX = re.compile(r"{(W[0-9]+)}")
 
     _SINGLE_LEVEL_PATTERN = r"[^\/]+"
-    _MULTI_LEVEL_PATTERN = r"[^\/]*\/?"
+    _MULTI_LEVEL_PATTERN = r"(.+)+?"
 
     _rule: List[str]
 
     def __init__(self, rule: str):
-        # rule == "a/{W1}/b/{w1}/c{w4}
         self._rule = rule.split("/")
 
-    def create_pattern_regex_match(self) -> Pattern:
+    def create_regex(self) -> Pattern:
+        pattern_creator = PatternGroupCreator()
         pattern_levels = []
         for level in self._rule:
             level = self._SINGLE_LEVEL_REGEX.sub(
-                lambda m: self._SINGLE_LEVEL_PATTERN,
+                lambda m: pattern_creator.get_pattern(m.groups()[0], self._SINGLE_LEVEL_PATTERN),
                 level
             )
 
             level = self._MULTI_LEVEL_REGEX.sub(
-                lambda m: self._MULTI_LEVEL_PATTERN,
-                level
-            )
-
-            pattern_levels.append(
-                level
-            )
-
-        return self._create_regex_from_levels(pattern_levels)
-
-    def create_pattern_regex_extract_path_segments(self) -> Pattern:
-        pattern_levels = []
-        for level in self._rule:
-            level = self._SINGLE_LEVEL_REGEX.sub(
-                lambda m: "(?P<{name}>{pattern})".format(name=m.groups()[0], pattern=self._SINGLE_LEVEL_PATTERN),
-                level
-            )
-
-            level = self._MULTI_LEVEL_REGEX.sub(
-                lambda m: "(?P<{name}>{pattern})".format(name=m.groups()[0], pattern=self._MULTI_LEVEL_PATTERN),
+                lambda m: pattern_creator.get_pattern(m.groups()[0], self._MULTI_LEVEL_PATTERN),
                 level
             )
 
@@ -57,30 +52,54 @@ class RegexPatternCreator:
 
     @staticmethod
     def _create_regex_from_levels(levels: List[str]) -> Pattern:
-        print("^" + r"\/".join(levels) + "$")
-
         return re.compile("^" + r"\/".join(levels) + "$")
 
 
 class TopicName:
-    _regex_topic_name = re.compile(TOPIC_NAME_REGEX_PATTERN)
+    # TODO: Caching: 1) rule format check, 2) rule regex compilation, 3) rule regex matching, 4) rule regex composing
+    _regex_rule_format = re.compile(TOPIC_NAME_REGEX_PATTERN)
 
-    _regex_static_topic_matches_rule: Pattern[str]
-    _regex_extract_path_segments: Pattern[str]
+    _regex_topic_name_extract: Pattern[str]
+    _rule: str
+    _rule_is_static: bool
+
+    @property
+    def rule(self) -> str:
+        return self._rule
 
     def __init__(self, rule: str):
-        if self._regex_topic_name.match(rule) is None:
-            raise ValueError("Invalid topic name")
+        self._rule = rule
 
-        regex_creator = RegexPatternCreator(rule)
-        self._regex_static_topic_matches_rule = regex_creator.create_pattern_regex_match()
-        self._regex_extract_path_segments = regex_creator.create_pattern_regex_extract_path_segments()
+        if "{" in self._rule:
+            self._rule_is_static = False
+        else:
+            self._rule_is_static = True
+
+        if not self._rule_is_static:
+            if self._regex_rule_format.match(self._rule) is None:
+                raise ValueError("Invalid topic name")
+
+            regex_creator = RegexPatternCreator(rule)
+            self._regex_topic_name_extract = regex_creator.create_regex()
 
     def matches(self, topic_rule: 'TopicName') -> bool:
-        ...
+        checked_topic_name = topic_rule.rule
 
-    def compose_static_topic_name(self, from_topic: 'TopicName') -> 'TopicName':
-        ...
+        if self._rule_is_static:
+            return checked_topic_name == self._rule
+
+        return self._regex_topic_name_extract.match(checked_topic_name) is not None
+
+    def compose_sink_topic_from_source(self, from_topic: 'TopicName') -> 'TopicName':
+        if self._rule_is_static:
+            return TopicName(self._rule)
+
+        sink_topic = self._rule
+        groups = self._regex_topic_name_extract.search(from_topic.rule).groupdict()
+        for group_id, value in groups.items():
+            sink_topic = sink_topic.replace("{{{0}}}".format(group_id), value)
+
+        return TopicName(sink_topic)
 
 
 class Message:
