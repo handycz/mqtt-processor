@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Any, Iterable, Pattern, Set, List
+from typing import Dict, Any, Iterable, Pattern, Set, List, Sequence
 
 from src.mqttprocessor.models import TOPIC_NAME_REGEX_PATTERN
 
@@ -125,23 +125,36 @@ class TopicName:
 
 
 class Message:
-    def __init__(self, sink_topic: TopicName, message_body: ...):
+    def __init__(self, sink_topic: TopicName, message_body: 'MessageBody'):
         ...
     # todo: serialize-like function
 
 
-class MultiMessage:
-    payload: Dict[str, Any] | Iterable[Any]
+class RoutedMessage:
+    payload: Dict[str, Any] | Sequence[Any]
 
     @property
-    def is_list(self) -> bool:
-        return isinstance(self.payload, list) \
-               or isinstance(self.payload, tuple) \
-               or isinstance(self.payload, set)
-
-    @property
-    def is_dict(self) -> bool:
+    def is_dict_of_routes_and_messages(self) -> bool:
         return isinstance(self.payload, dict)
 
+    @property
+    def is_list_of_messages_without_routes(self) -> bool:
+        return isinstance(self.payload, list)
 
-multimessage = MultiMessage
+    @property
+    def is_single_route_and_list_of_messages(self) -> bool:
+        return isinstance(self.payload, tuple) \
+                and len(self.payload) == 2 \
+                and isinstance(self.payload[0], str) \
+                and isinstance(self.payload[1], list)
+
+    @property
+    def is_single_route_and_single_message(self) -> bool:
+        return isinstance(self.payload, tuple) \
+                and len(self.payload) == 2 \
+                and isinstance(self.payload[0], str) \
+                and not isinstance(self.payload[1], list)
+
+
+MessageBody = Any
+routedmessage = RoutedMessage
