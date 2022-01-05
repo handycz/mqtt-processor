@@ -1,4 +1,5 @@
 import re
+from dataclasses import dataclass
 from typing import Dict, Any, Iterable, Pattern, Set, List, Sequence
 
 from src.mqttprocessor.models import TOPIC_NAME_REGEX_PATTERN
@@ -124,10 +125,10 @@ class TopicName:
         return "TopicName(rule={0}, static={1})".format(self._rule, self._rule_is_static)
 
 
+@dataclass(frozen=True)
 class Message:
-    def __init__(self, sink_topic: TopicName, message_body: 'MessageBody'):
-        ...
-    # todo: serialize-like function
+    sink_topic: TopicName
+    message_body: 'MessageBody'
 
 
 class RoutedMessage:
