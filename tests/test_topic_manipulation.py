@@ -74,7 +74,14 @@ def test_topic_name_dynamic_compose_no_match():
 
 def test_topic_name_dynamic_multilevel_compose():
     rule = TopicName("{W1}/device1/temperature")
-    assert False
+    actual = rule.compose_sink_topic_from_source(
+        TopicName("building1/room2/device1/temperature"),
+        TopicName("{W1}/temp")
+    )
+
+    expected = TopicName("building1/room2/temp")
+
+    assert actual == expected
 
 
 def test_pattern_creator_match_single_level():
