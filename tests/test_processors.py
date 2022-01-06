@@ -8,6 +8,7 @@ from src.mqttprocessor.functions import ProcessorFunction
 # TODO:
 #  - single processor test
 #     - for all possible RoutedMessage configurations
+#     - for hierarchical-level RoutedMessage configurations
 #     - for all possible sink/source variations
 #     - static and dynamic routed sinks
 #     - static and dynamic constant sinks
@@ -127,8 +128,8 @@ def test_routed_function_after_plain_processing_function(processor_functions: Li
     )
 
     assert len(msgs) == 1
-    assert msgs[0].message_body == "base-message<concat1><concat_routed>"
-    assert msgs[0].sink_topic == TopicName("concat/routed/destination/topic")
+    assert msgs[0].message_body == "base-message<concat1><dict-routed>"
+    assert msgs[0].sink_topic == TopicName("dict/routed/destination/topic")
 
 
 @pytest.mark.parametrize(

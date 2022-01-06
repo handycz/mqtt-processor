@@ -61,34 +61,42 @@ def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
     @converter
     def dummy_str_concat_routed_dict(x):
         return routedmessage({
-            "concat/routed/destination/topic": x + "<concat_routed>"
+            "dict/routed/destination/topic": x + "<dict-routed>"
         })
 
     @converter
     def dummy_str_concat_routed_dict_multiple(x):
         return routedmessage({
-            "concat/routed/destination/topic": x + "<concat_routed1>",
-            "concat/routed/destination/topic": x + "<concat_routed2>",
-            "concat/routed/destination/topic": x + "<concat_routed3>",
+            "multiroute-dict/routed/destination/topic1": x + "<multiroute-dict1>",
+            "multiroute-dict/routed/destination/topic2": x + "<multiroute-dict2>",
+            "multiroute-dict/routed/destination/topic3": x + "<multiroute-dict3>",
         })
 
     @converter
     def dummy_str_concat_routed_list(x):
-        return routedmessage({
-            "concat/routed/destination/topic": x + "<concat_routed>"
-        })
+        return routedmessage([
+            "<routed_list-msg1>",
+            "<routed_list-msg2>",
+            "<routed_list-msg3>"
+        ])
 
     @converter
     def dummy_str_concat_routed_tuple_containing_multiple(x):
-        return routedmessage({
-            "concat/routed/destination/topic": x + "<concat_routed>"
-        })
+        return routedmessage((
+            "tuple-of-lists/routed/destination/topic",
+            [
+                "<routed_tuple_of_lists-msg1>",
+                "<routed_tuple_of_lists-msg2>",
+                "<routed_tuple_of_lists-msg3>"
+            ]
+        ))
 
     @converter
     def dummy_str_concat_routed_tuple_containing_single(x):
-        return routedmessage({
-            "concat/routed/destination/topic": x + "<concat_routed>"
-        })
+        return routedmessage((
+            "tuple/routed/destination/topic",
+            "<routed-tuple>"
+        ))
 
     register = src.mqttprocessor.functions.create_processor_register()
     models = _create_function_models(request)

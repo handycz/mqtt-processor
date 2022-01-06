@@ -1,3 +1,4 @@
+import itertools
 import logging
 import inspect
 from functools import wraps
@@ -77,41 +78,45 @@ class SingleSourceProcessor:
         outgoing_simple_messages = list()
 
         if routed_message.is_dict_of_routes_and_messages:
-            for sink_topic, body in routed_message.payload.items():
-                outgoing_simple_messages += self._create_message(
-                    message=body,
-                    actual_source_topic=actual_source_topic,
-                    sink_topic=TopicName(sink_topic)
-                )
+            payload_iterator = routed_message.payload.items()
+
         elif routed_message.is_list_of_messages_without_routes:
-            for body in routed_message.payload:
-                outgoing_simple_messages += self._create_message(
-                    message=body,
-                    actual_source_topic=actual_source_topic,
-                    sink_topic=self._default_sink_topic
-                )
+            payload_iterator = zip(
+                itertools.repeat(
+                    self._default_sink_topic.rule
+                ),
+                routed_message.payload
+            )
+
         elif routed_message.is_single_route_and_list_of_messages:
             sink_topic: str = routed_message.payload[0]
             messages: List[Any] = routed_message.payload[1]
-            for body in messages:
-                outgoing_simple_messages += self._create_message(
-                    message=body,
-                    actual_source_topic=actual_source_topic,
-                    sink_topic=TopicName(sink_topic)
-                )
+
+            payload_iterator = zip(
+                itertools.repeat(
+                    sink_topic
+                ),
+                messages
+            )
+
         elif routed_message.is_single_route_and_single_message:
             sink_topic: str = routed_message.payload[0]
             body: Any = routed_message.payload[1]
 
+            payload_iterator = [
+                (sink_topic, body)
+            ]
+
+        else:
+            self._logger.warning("routed message of unknown type, ignoring")
+            return []
+
+        for sink_topic, body in payload_iterator:
             outgoing_simple_messages += self._create_message(
                 message=body,
                 actual_source_topic=actual_source_topic,
                 sink_topic=TopicName(sink_topic)
             )
-
-        else:
-            self._logger.warning("routed message of unknown type, ignoring")
-            return []
 
         return outgoing_simple_messages
 
