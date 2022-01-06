@@ -55,8 +55,8 @@ def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
         return x + "<concat2>"
 
     @converter
-    def dummy_str_concat_with_param(x, val):
-        return x + "<concat-" + val + ">"
+    def dummy_str_concat_with_params(x, a, b):
+        return "{}<concat-a+b={}+{}={}>".format(x, a, b, a+b)
 
     @converter
     def dummy_str_concat_routed_dict(x):

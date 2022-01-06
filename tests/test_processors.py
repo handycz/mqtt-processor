@@ -3,12 +3,10 @@ from typing import Dict, List, Tuple
 import pytest
 
 from src.mqttprocessor.messages import TopicName
-from src.mqttprocessor.functions import ProcessorFunctionDefinition, ProcessorFunction, create_functions
+from src.mqttprocessor.functions import ProcessorFunction
 
 # TODO:
 #  - single processor test
-#     - chaining routed after normal function
-#     - chaining normal after routed function
 #     - function with params
 #     - for all possible RoutedMessage configurations
 #     - for all possible sink/source variations
@@ -47,11 +45,11 @@ def test_single_filter_passing(processor_functions: List[ProcessorFunction]):
     )
 
     msgs = processor.process_message(
-        source.rule, "basemessage"
+        source.rule, "base-message"
     )
 
     assert len(msgs) == 1
-    assert msgs[0].message_body == "basemessage"
+    assert msgs[0].message_body == "base-message"
     assert msgs[0].sink_topic == sink
 
 
@@ -67,7 +65,7 @@ def test_single_filter_non_passing(processor_functions: List[ProcessorFunction])
     )
 
     msgs = processor.process_message(
-        source.rule, "basemessage"
+        source.rule, "base-message"
     )
 
     assert msgs == []
@@ -85,11 +83,11 @@ def test_single_processing_function(processor_functions: List[ProcessorFunction]
     )
 
     msgs = processor.process_message(
-        source.rule, "basemessage"
+        source.rule, "base-message"
     )
 
     assert len(msgs) == 1
-    assert msgs[0].message_body == "basemessage<concat1>"
+    assert msgs[0].message_body == "base-message<concat1>"
     assert msgs[0].sink_topic == sink
 
 
@@ -105,11 +103,11 @@ def test_multiple_processing_functions(processor_functions: List[ProcessorFuncti
     )
 
     msgs = processor.process_message(
-        source.rule, "basemessage"
+        source.rule, "base-message"
     )
 
     assert len(msgs) == 1
-    assert msgs[0].message_body == "basemessage<concat1><concat2>"
+    assert msgs[0].message_body == "base-message<concat1><concat2>"
     assert msgs[0].sink_topic == sink
 
 
@@ -119,18 +117,55 @@ def test_multiple_processing_functions(processor_functions: List[ProcessorFuncti
         ["dummy_str_concat1", "dummy_str_concat_routed_dict"]
     ], indirect=True
 )
-def test_routed_function_after_normal_processing_function(processor_functions: List[ProcessorFunction]):
+def test_routed_function_after_plain_processing_function(processor_functions: List[ProcessorFunction]):
     processor, source, sink = _create_single_source_processor(
-        "routed-after-normal-processing-function", processor_functions
+        "routed-after-plain-processing-function", processor_functions
     )
 
     msgs = processor.process_message(
-        source.rule, "basemessage"
+        source.rule, "base-message"
     )
 
     assert len(msgs) == 1
-    assert msgs[0].message_body == "basemessage<concat1><concat_routed>"
+    assert msgs[0].message_body == "base-message<concat1><concat_routed>"
     assert msgs[0].sink_topic == TopicName("concat/routed/destination/topic")
+
+
+@pytest.mark.parametrize(
+    "processor_functions",
+    [
+        ["dummy_str_concat_routed_dict", "dummy_str_concat1"]
+    ], indirect=True
+)
+def test_plain_function_after_routed_function_processing_function(processor_functions: List[ProcessorFunction]):
+    processor, source, sink = _create_single_source_processor(
+        "routed-after-plain-normal-processing-function", processor_functions
+    )
+
+    msgs = processor.process_message(
+        source.rule, "base-message"
+    )
+
+    assert msgs == []
+
+
+@pytest.mark.parametrize(
+    "processor_functions",
+    [
+        [("dummy_str_concat_with_params", 5, 10)]
+    ], indirect=True
+)
+def test_parametrized_processing_function(processor_functions: List[ProcessorFunction]):
+    processor, source, sink = _create_single_source_processor(
+        "parametrized-processing-function", processor_functions
+    )
+
+    msgs = processor.process_message(
+        source.rule, "base-message"
+    )
+
+    assert len(msgs) == 1
+    assert msgs[0].message_body == "base-message<concat-a+b=5+10=15>"
 
 
 def _create_single_source_processor(
