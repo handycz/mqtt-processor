@@ -7,13 +7,13 @@ from src.mqttprocessor.functions import ProcessorFunction
 
 # TODO:
 #  - single processor test
-#     - function with params
 #     - for all possible RoutedMessage configurations
 #     - for all possible sink/source variations
 #     - static and dynamic routed sinks
 #     - static and dynamic constant sinks
 #  - multi processor test
-#     - just test the topic matching
+#     - topic matching
+#     - message processing for normal and single routed message
 from src.mqttprocessor.routing import SingleSourceProcessor
 
 
@@ -147,6 +147,25 @@ def test_plain_function_after_routed_function_processing_function(processor_func
     )
 
     assert msgs == []
+
+
+@pytest.mark.parametrize(
+    "processor_functions",
+    [
+        [("dummy_str_concat_with_params", 5, 10)]
+    ], indirect=True
+)
+def test_parametrized_processing_function(processor_functions: List[ProcessorFunction]):
+    processor, source, sink = _create_single_source_processor(
+        "parametrized-processing-function", processor_functions
+    )
+
+    msgs = processor.process_message(
+        source.rule, "base-message"
+    )
+
+    assert len(msgs) == 1
+    assert msgs[0].message_body == "base-message<concat-a+b=5+10=15>"
 
 
 @pytest.mark.parametrize(

@@ -64,6 +64,32 @@ def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
             "concat/routed/destination/topic": x + "<concat_routed>"
         })
 
+    @converter
+    def dummy_str_concat_routed_dict_multiple(x):
+        return routedmessage({
+            "concat/routed/destination/topic": x + "<concat_routed1>",
+            "concat/routed/destination/topic": x + "<concat_routed2>",
+            "concat/routed/destination/topic": x + "<concat_routed3>",
+        })
+
+    @converter
+    def dummy_str_concat_routed_list(x):
+        return routedmessage({
+            "concat/routed/destination/topic": x + "<concat_routed>"
+        })
+
+    @converter
+    def dummy_str_concat_routed_tuple_containing_multiple(x):
+        return routedmessage({
+            "concat/routed/destination/topic": x + "<concat_routed>"
+        })
+
+    @converter
+    def dummy_str_concat_routed_tuple_containing_single(x):
+        return routedmessage({
+            "concat/routed/destination/topic": x + "<concat_routed>"
+        })
+
     register = src.mqttprocessor.functions.create_processor_register()
     models = _create_function_models(request)
 

@@ -71,43 +71,62 @@ class SingleSourceProcessor:
                 )
             ]
 
-    def _decompose_routed_messages(self, actual_source_topic: TopicName, routed_message: RoutedMessage):
+    def _decompose_routed_messages(
+            self, actual_source_topic: TopicName, routed_message: RoutedMessage
+    ) -> List[Message]:
+        outgoing_simple_messages = list()
+
         if routed_message.is_dict_of_routes_and_messages:
-            return [
-                Message(
-                    self._get_sink_topic(actual_source_topic, sink_topic),
-                    body
+            for sink_topic, body in routed_message.payload.items():
+                outgoing_simple_messages += self._create_message(
+                    message=body,
+                    actual_source_topic=actual_source_topic,
+                    sink_topic=TopicName(sink_topic)
                 )
-                for sink_topic, body in routed_message.payload.items()
-            ]
         elif routed_message.is_list_of_messages_without_routes:
-            return [
-                Message(
-                    self._get_sink_topic(actual_source_topic, self._default_sink_topic),
-                    body
+            for body in routed_message.payload:
+                outgoing_simple_messages += self._create_message(
+                    message=body,
+                    actual_source_topic=actual_source_topic,
+                    sink_topic=self._default_sink_topic
                 )
-                for body in routed_message.payload
-            ]
         elif routed_message.is_single_route_and_list_of_messages:
             sink_topic: str = routed_message.payload[0]
             messages: List[Any] = routed_message.payload[1]
-            return [
-                Message(
-                    self._get_sink_topic(actual_source_topic, sink_topic),
-                    body
+            for body in messages:
+                outgoing_simple_messages += self._create_message(
+                    message=body,
+                    actual_source_topic=actual_source_topic,
+                    sink_topic=TopicName(sink_topic)
                 )
-                for body in messages
-            ]
         elif routed_message.is_single_route_and_single_message:
             sink_topic: str = routed_message.payload[0]
-            message: Any = routed_message.payload[1]
-            return Message(
-                self._get_sink_topic(actual_source_topic, sink_topic),
-                message
+            body: Any = routed_message.payload[1]
+
+            outgoing_simple_messages += self._create_message(
+                message=body,
+                actual_source_topic=actual_source_topic,
+                sink_topic=TopicName(sink_topic)
             )
+
         else:
             self._logger.warning("routed message of unknown type, ignoring")
             return []
+
+        return outgoing_simple_messages
+
+    def _create_message(
+            self, message: RoutedMessage | MessageBody, actual_source_topic: TopicName, sink_topic: TopicName
+    ) -> List[Message]:
+        if isinstance(message, RoutedMessage):
+            return self._decompose_routed_messages(actual_source_topic, message)
+
+        return [
+            Message(
+                self._get_sink_topic(actual_source_topic, sink_topic),
+                message_body=message
+            )
+        ]
 
     def _get_sink_topic(
             self, actual_source_topic: TopicName | str, selected_sink_topic_rule: TopicName | str
