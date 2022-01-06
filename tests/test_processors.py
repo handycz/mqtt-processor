@@ -115,7 +115,7 @@ def test_multiple_processing_functions(processor_functions: List[ProcessorFuncti
 @pytest.mark.parametrize(
     "processor_functions",
     [
-        ["dummy_str_concat1", "dummy_str_concat_routed_dict"]
+        ["dummy_str_concat1", "dummy_routed_dict"]
     ], indirect=True
 )
 def test_routed_function_after_plain_processing_function(processor_functions: List[ProcessorFunction]):
@@ -135,7 +135,7 @@ def test_routed_function_after_plain_processing_function(processor_functions: Li
 @pytest.mark.parametrize(
     "processor_functions",
     [
-        ["dummy_str_concat_routed_dict", "dummy_str_concat1"]
+        ["dummy_routed_dict", "dummy_str_concat1"]
     ], indirect=True
 )
 def test_plain_function_after_routed_function_processing_function(processor_functions: List[ProcessorFunction]):
@@ -186,6 +186,49 @@ def test_parametrized_processing_function(processor_functions: List[ProcessorFun
 
     assert len(msgs) == 1
     assert msgs[0].message_body == "base-message<concat-a+b=5+10=15>"
+
+
+@pytest.mark.parametrize(
+    "processor_functions",
+    [
+        ["dummy_routed_dict"]
+    ], indirect=True
+)
+def test_routed_message_dict(processor_functions: List[ProcessorFunction]):
+    processor, source, sink = _create_single_source_processor(
+        "routed-message-dict", processor_functions
+    )
+
+    msgs = processor.process_message(
+        source.rule, "base-message"
+    )
+
+    assert len(msgs) == 1
+    assert msgs[0].message_body == "base-message<dict-routed>"
+    assert msgs[0].sink_topic == TopicName("dict/routed/destination/topic")
+
+
+@pytest.mark.parametrize(
+    "processor_functions",
+    [
+        ["dummy_routed_dict_multiple"]
+    ], indirect=True
+)
+def test_routed_message_dict_multiple_routes(processor_functions: List[ProcessorFunction]):
+    processor, source, sink = _create_single_source_processor(
+        "routed-message-dict-multiple", processor_functions
+    )
+
+    msgs = processor.process_message(
+        source.rule, "base-message"
+    )
+
+    assert len(msgs) == 3
+    print(msgs)
+    for msg_number in range(1, 4):
+        # TODO: nemusi byt serazene! asi by bylo dobry to nejak radit interne!
+        assert msgs[msg_number].message_body == "base-message<multiroute-dict{}>".format(msg_number)
+        assert msgs[msg_number].sink_topic == "multiroute-dict/routed/destination/topic{}".format(msg_number)
 
 
 def _create_single_source_processor(

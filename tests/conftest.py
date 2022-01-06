@@ -59,13 +59,13 @@ def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
         return "{}<concat-a+b={}+{}={}>".format(x, a, b, a+b)
 
     @converter
-    def dummy_str_concat_routed_dict(x):
+    def dummy_routed_dict(x):
         return routedmessage({
             "dict/routed/destination/topic": x + "<dict-routed>"
         })
 
     @converter
-    def dummy_str_concat_routed_dict_multiple(x):
+    def dummy_routed_dict_multiple(x):
         return routedmessage({
             "multiroute-dict/routed/destination/topic1": x + "<multiroute-dict1>",
             "multiroute-dict/routed/destination/topic2": x + "<multiroute-dict2>",
@@ -73,7 +73,7 @@ def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
         })
 
     @converter
-    def dummy_str_concat_routed_list(x):
+    def dummy_routed_list(x):
         return routedmessage([
             "<routed_list-msg1>",
             "<routed_list-msg2>",
@@ -81,7 +81,7 @@ def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
         ])
 
     @converter
-    def dummy_str_concat_routed_tuple_containing_multiple(x):
+    def dummy_routed_tuple_containing_multiple(x):
         return routedmessage((
             "tuple-of-lists/routed/destination/topic",
             [
@@ -92,7 +92,7 @@ def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
         ))
 
     @converter
-    def dummy_str_concat_routed_tuple_containing_single(x):
+    def dummy_routed_tuple_containing_single(x):
         return routedmessage((
             "tuple/routed/destination/topic",
             "<routed-tuple>"
