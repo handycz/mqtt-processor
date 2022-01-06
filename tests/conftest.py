@@ -7,6 +7,7 @@ from _pytest.fixtures import SubRequest
 
 import src.mqttprocessor.functions
 from src.mqttprocessor.functions import ProcessorFunction, create_functions, ProcessorFunctionDefinition
+from src.mqttprocessor.messages import routedmessage
 from src.mqttprocessor.models import ExtendedFunctionModel, FunctionNameModel
 
 
@@ -35,24 +36,33 @@ def config_file_stream(request: SubRequest) -> TextIO:
 def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
     reload(src.mqttprocessor.functions)
     rule = src.mqttprocessor.functions.rule
+    converter = src.mqttprocessor.functions.converter
 
     @rule
+    def dummy_rule_false(x):
+        return False
+
+    @rule
+    def dummy_rule_true(x):
+        return True
+
+    @converter
     def dummy_str_concat1(x):
         return x + "<concat1>"
 
-    @rule
+    @converter
     def dummy_str_concat2(x):
         return x + "<concat2>"
 
-    @rule
+    @converter
     def dummy_str_concat_with_param(x, val):
         return x + "<concat-" + val + ">"
 
-    @rule
-    def dummy_str_concat_rich_dict(x):
-        return {
-            "destination/topic": x + "<contact_rich>"
-        }
+    @converter
+    def dummy_str_concat_routed_dict(x):
+        return routedmessage({
+            "concat/routed/destination/topic": x + "<concat_routed>"
+        })
 
     register = src.mqttprocessor.functions.create_processor_register()
     models = _create_function_models(request)

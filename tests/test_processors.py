@@ -7,14 +7,12 @@ from src.mqttprocessor.functions import ProcessorFunctionDefinition, ProcessorFu
 
 # TODO:
 #  - single processor test
-#     - single processing function
-#     - several processing functions
-#     - chaining rich after normal function
-#     - chaining normal after rich function
+#     - chaining routed after normal function
+#     - chaining normal after routed function
 #     - function with params
-#     - for all possible RichMessage configurations
+#     - for all possible RoutedMessage configurations
 #     - for all possible sink/source variations
-#     - static and dynamic rich sinks
+#     - static and dynamic routed sinks
 #     - static and dynamic constant sinks
 #  - multi processor test
 #     - just test the topic matching
@@ -40,6 +38,44 @@ def test_single_processor_matches(processor_functions: List[ProcessorFunction]):
 @pytest.mark.parametrize(
     "processor_functions",
     [
+        ["dummy_rule_true"]
+    ], indirect=True
+)
+def test_single_filter_passing(processor_functions: List[ProcessorFunction]):
+    processor, source, sink = _create_single_source_processor(
+        "single-processing-function", processor_functions
+    )
+
+    msgs = processor.process_message(
+        source.rule, "basemessage"
+    )
+
+    assert len(msgs) == 1
+    assert msgs[0].message_body == "basemessage"
+    assert msgs[0].sink_topic == sink
+
+
+@pytest.mark.parametrize(
+    "processor_functions",
+    [
+        ["dummy_rule_false"]
+    ], indirect=True
+)
+def test_single_filter_non_passing(processor_functions: List[ProcessorFunction]):
+    processor, source, sink = _create_single_source_processor(
+        "single-processing-function", processor_functions
+    )
+
+    msgs = processor.process_message(
+        source.rule, "basemessage"
+    )
+
+    assert msgs == []
+
+
+@pytest.mark.parametrize(
+    "processor_functions",
+    [
         ["dummy_str_concat1"]
     ], indirect=True
 )
@@ -52,10 +88,49 @@ def test_single_processing_function(processor_functions: List[ProcessorFunction]
         source.rule, "basemessage"
     )
 
-    assert isinstance(msgs, list)
     assert len(msgs) == 1
     assert msgs[0].message_body == "basemessage<concat1>"
-    assert msgs[0].sink_topic == source
+    assert msgs[0].sink_topic == sink
+
+
+@pytest.mark.parametrize(
+    "processor_functions",
+    [
+        ["dummy_str_concat1", "dummy_str_concat2"]
+    ], indirect=True
+)
+def test_multiple_processing_functions(processor_functions: List[ProcessorFunction]):
+    processor, source, sink = _create_single_source_processor(
+        "multiple-processing-functions", processor_functions
+    )
+
+    msgs = processor.process_message(
+        source.rule, "basemessage"
+    )
+
+    assert len(msgs) == 1
+    assert msgs[0].message_body == "basemessage<concat1><concat2>"
+    assert msgs[0].sink_topic == sink
+
+
+@pytest.mark.parametrize(
+    "processor_functions",
+    [
+        ["dummy_str_concat1", "dummy_str_concat_routed_dict"]
+    ], indirect=True
+)
+def test_routed_function_after_normal_processing_function(processor_functions: List[ProcessorFunction]):
+    processor, source, sink = _create_single_source_processor(
+        "routed-after-normal-processing-function", processor_functions
+    )
+
+    msgs = processor.process_message(
+        source.rule, "basemessage"
+    )
+
+    assert len(msgs) == 1
+    assert msgs[0].message_body == "basemessage<concat1><concat_routed>"
+    assert msgs[0].sink_topic == TopicName("concat/routed/destination/topic")
 
 
 def _create_single_source_processor(

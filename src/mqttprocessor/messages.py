@@ -134,6 +134,9 @@ class Message:
 class RoutedMessage:
     payload: Dict[str, Any] | Sequence[Any]
 
+    def __init__(self, payload: Any):
+        self.payload = payload
+
     @property
     def is_dict_of_routes_and_messages(self) -> bool:
         return isinstance(self.payload, dict)

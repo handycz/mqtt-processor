@@ -41,18 +41,18 @@ class SingleSourceProcessor:
     def _process_message_content(self, input_message: MessageBody) -> MessageBody:
         message = input_message
         for function in self._functions:
+            if isinstance(message, RoutedMessage):
+                self._logger.error(
+                    "Ignoring routed message produced by `%s`, because it's followed by another function",
+                    function.callback.__name__
+                )
+                return None
+
             if function.ptype == ProcessorFunctionType.RULE:
                 if not function.callback(message):
                     return None
             else:
                 message = function.callback(message)
-
-                if isinstance(message, RoutedMessage):
-                    self._logger.error(
-                        "Ignoring routed message produced by `%s`, because it's followed by another function",
-                        function.callback.__name__
-                    )
-                    return None
 
         return message
 
@@ -78,7 +78,7 @@ class SingleSourceProcessor:
                     self._get_sink_topic(actual_source_topic, sink_topic),
                     body
                 )
-                for sink_topic, body in routed_message.payload
+                for sink_topic, body in routed_message.payload.items()
             ]
         elif routed_message.is_list_of_messages_without_routes:
             return [

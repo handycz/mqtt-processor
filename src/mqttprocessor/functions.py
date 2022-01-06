@@ -88,7 +88,7 @@ def _create_function_representation(
 ) -> ProcessorFunction:
     @wraps(function_definition.callback)
     def _cbk_wrapper(val):
-        function_definition.callback(val, *function_config.arguments)
+        return function_definition.callback(val, *function_config.arguments)
 
     return ProcessorFunction(
         function_definition.ptype,
