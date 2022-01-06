@@ -6,7 +6,8 @@ from typing import List, Optional, Dict, Any
 from src.mqttprocessor.definitions import ProcessorFunctionType
 from src.mqttprocessor.messages import RoutedMessage, TopicName, Message, MessageBody
 from src.mqttprocessor.models import ProcessorConfigModel, ExtendedFunctionModel
-from src.mqttprocessor.processors import ProcessorFunction, create_processor_register, ProcessorFunctionDefinition
+from src.mqttprocessor.functions import ProcessorFunction, create_processor_register, ProcessorFunctionDefinition, \
+    create_functions
 
 
 class SingleSourceProcessor:
@@ -125,68 +126,17 @@ class Processor:
     _logger: logging.Logger
     _processors: List[SingleSourceProcessor]
 
-    def __init__(self, processor_config: ProcessorConfigModel):
-        self._logger = logging.getLogger(__name__ + "=" + processor_config.name)
+    def __init__(self, name: str, functions: List[ProcessorFunction], sources: List[TopicName], sink: TopicName):
+        self._logger = logging.getLogger(__name__ + "=" + name)
 
-        functions = self._create_functions(processor_config.function)
         self._processors = [
             SingleSourceProcessor(
-                name=processor_config.name, functions=functions,
-                source_topic_rule=TopicName(topic.__root__),
-                default_sink_topic=TopicName(processor_config.sink.__root__)
+                name=name, functions=functions,
+                source_topic_rule=topic,
+                default_sink_topic=sink
 
-            ) for topic in processor_config.source
+            ) for topic in sources
         ]
-
-    def _create_functions(self, functions_config: List[ExtendedFunctionModel]) -> List[ProcessorFunction]:
-        functions = list()
-        global_function_store = create_processor_register()
-
-        for function_config in functions_config:
-            self._logger.info("Registering function %s", function_config.name)
-
-            if function_config.name not in global_function_store:
-                raise ValueError(f"Function `{function_config.name}` undefined")
-
-            function_definition = global_function_store[function_config.name.__root__]
-
-            Processor._verify_function_arguments(function_config, function_definition)
-            function = Processor._create_function_representation(function_config, function_definition)
-
-            functions.append(
-                function
-            )
-
-        return functions
-
-    @staticmethod
-    def _verify_function_arguments(
-            function_config: ExtendedFunctionModel, function_definition: ProcessorFunctionDefinition
-    ):
-        function_signature = inspect.signature(function_definition.callback)
-        number_of_nondefault_params = [
-            param.default for param in function_signature.parameters.values()
-        ].count(inspect.Parameter.empty)
-        num_args_in_config = len(function_config.arguments)
-        num_params_of_function = number_of_nondefault_params - 1
-        if num_args_in_config != num_params_of_function:
-            raise ValueError(
-                f"Config gives {num_args_in_config} arguments for "
-                f"a function with {num_params_of_function} + 1 parameters"
-            )
-
-    @staticmethod
-    def _create_function_representation(
-            function_config: ExtendedFunctionModel, function_definition: ProcessorFunctionDefinition
-    ) -> ProcessorFunction:
-        @wraps(function_definition.callback)
-        def _cbk_wrapper(val):
-            function_definition.callback(val, *function_config.arguments)
-
-        return ProcessorFunction(
-            function_definition.ptype,
-            _cbk_wrapper
-        )
 
     def process_message(self, source_topic: str, message: MessageBody) -> List[Message]:
         matched_processor = self._get_relevant_source_topic(
@@ -204,3 +154,22 @@ class Processor:
                 return processor
 
         return None
+
+
+class ProcessorCreator:
+    _config: ProcessorConfigModel
+
+    def __init__(self, processor_config: ProcessorConfigModel):
+        self._config = processor_config
+
+    def create(self) -> Processor:
+        return Processor(
+            name=self._config.name,
+            functions=create_functions(
+                self._config.function
+            ),
+            sources=[
+                TopicName(source.__root__) for source in self._config.source
+            ],
+            sink=TopicName(self._config.sink.__root__)
+        )

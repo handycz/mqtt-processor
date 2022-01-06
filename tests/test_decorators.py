@@ -2,7 +2,7 @@ from typing import Callable
 
 import pytest
 
-from src.mqttprocessor.processors import create_processor_register
+from src.mqttprocessor.functions import create_processor_register
 from src.mqttprocessor.definitions import ProcessorFunctionType
 
 
