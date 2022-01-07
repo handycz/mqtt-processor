@@ -2,7 +2,7 @@ from typing import List
 
 import pytest
 
-from src.mqttprocessor.messages import TopicName
+from src.mqttprocessor.messages import TopicName, Message
 from src.mqttprocessor.functions import ProcessorFunction
 
 from tests.processors.common import _create_single_source_processor
@@ -39,9 +39,13 @@ def test_single_filter_passing(processor_functions: List[ProcessorFunction]):
         source.rule, "base-message"
     )
 
-    assert len(actual) == 1
-    assert actual[0].message_body == "base-message"
-    assert actual[0].sink_topic == sink
+    expected = [
+        Message(
+            sink, "base-message"
+        )
+    ]
+
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -77,9 +81,11 @@ def test_single_processing_function(processor_functions: List[ProcessorFunction]
         source.rule, "base-message"
     )
 
-    assert len(actual) == 1
-    assert actual[0].message_body == "base-message<concat1>"
-    assert actual[0].sink_topic == sink
+    expected = [
+        Message(sink, "base-message<concat1>")
+    ]
+
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -97,9 +103,13 @@ def test_multiple_processing_functions(processor_functions: List[ProcessorFuncti
         source.rule, "base-message"
     )
 
-    assert len(actual) == 1
-    assert actual[0].message_body == "base-message<concat1><concat2>"
-    assert actual[0].sink_topic == sink
+    expected = [
+        Message(
+            sink, "base-message<concat1><concat2>"
+        )
+    ]
+
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -117,9 +127,13 @@ def test_routed_function_after_plain_processing_function(processor_functions: Li
         source.rule, "base-message"
     )
 
-    assert len(actual) == 1
-    assert actual[0].message_body == "base-message<concat1><dict-routed>"
-    assert actual[0].sink_topic == TopicName("dict/routed/destination/topic")
+    expected = [
+        Message(
+            TopicName("dict/routed/destination/topic"), "base-message<concat1><dict-routed>"
+        )
+    ]
+
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -155,27 +169,13 @@ def test_parametrized_processing_function(processor_functions: List[ProcessorFun
         source.rule, "base-message"
     )
 
-    assert len(actual) == 1
-    assert actual[0].message_body == "base-message<concat-a+b=5+10=15>"
+    expected = [
+        Message(
+            sink, "base-message<concat-a+b=5+10=15>"
+        )
+    ]
 
-
-@pytest.mark.parametrize(
-    "processor_functions",
-    [
-        [("dummy_str_concat_with_params", 5, 10)]
-    ], indirect=True
-)
-def test_parametrized_processing_function(processor_functions: List[ProcessorFunction]):
-    processor, source, sink = _create_single_source_processor(
-        "parametrized-processing-function", processor_functions
-    )
-
-    actual = processor.process_message(
-        source.rule, "base-message"
-    )
-
-    assert len(actual) == 1
-    assert actual[0].message_body == "base-message<concat-a+b=5+10=15>"
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -212,3 +212,28 @@ def test_failing_rule(processor_functions: List[ProcessorFunction]):
     )
 
     assert actual == []
+
+
+@pytest.mark.parametrize(
+    "processor_functions",
+    [
+        ["dummy_str_concat1"]
+    ], indirect=True
+)
+def test_normal_message_without_default_sink(processor_functions: List[ProcessorFunction]):
+    processor, source, sink = _create_single_source_processor(
+        "no-sink-specified", processor_functions,
+        sink_topic=None, allow_sink_none=True
+    )
+
+    actual = processor.process_message(
+        source.rule, "base-message"
+    )
+
+    expected = [
+        Message(
+            None, "base-message<concat1>"
+        )
+    ]
+
+    assert actual == expected
