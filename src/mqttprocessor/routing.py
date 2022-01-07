@@ -63,7 +63,7 @@ class SingleSourceProcessor:
         if output_message_body is None:
             return []
         elif isinstance(output_message_body, RoutedMessage):
-            return self._decompose_routed_messages(actual_source_topic, output_message_body)
+            return self._decompose_routed_messages(actual_source_topic, self._default_sink_topic, output_message_body)
         else:
             return [
                 Message(
@@ -73,7 +73,7 @@ class SingleSourceProcessor:
             ]
 
     def _decompose_routed_messages(
-            self, actual_source_topic: TopicName, routed_message: RoutedMessage
+            self, actual_source_topic: TopicName, default_sink_topic: TopicName, routed_message: RoutedMessage
     ) -> List[Message]:
         outgoing_simple_messages = list()
 
@@ -83,7 +83,7 @@ class SingleSourceProcessor:
         elif routed_message.is_list_of_messages_without_routes:
             payload_iterator = zip(
                 itertools.repeat(
-                    self._default_sink_topic.rule
+                    default_sink_topic.rule
                 ),
                 routed_message.payload
             )
@@ -124,7 +124,7 @@ class SingleSourceProcessor:
             self, message: RoutedMessage | MessageBody, actual_source_topic: TopicName, sink_topic: TopicName
     ) -> List[Message]:
         if isinstance(message, RoutedMessage):
-            return self._decompose_routed_messages(actual_source_topic, message)
+            return self._decompose_routed_messages(actual_source_topic, sink_topic, message)
 
         return [
             Message(

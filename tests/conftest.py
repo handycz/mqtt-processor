@@ -1,6 +1,6 @@
 from importlib import reload
 from pathlib import Path
-from typing import TextIO, Dict, List
+from typing import TextIO, List
 
 import pytest
 from _pytest.fixtures import SubRequest
@@ -8,7 +8,7 @@ from _pytest.fixtures import SubRequest
 import src.mqttprocessor.functions
 from src.mqttprocessor.functions import ProcessorFunction, create_functions, ProcessorFunctionDefinition
 from src.mqttprocessor.messages import routedmessage
-from src.mqttprocessor.models import ExtendedFunctionModel, FunctionNameModel
+from src.mqttprocessor.models import ExtendedFunctionModel
 
 
 @pytest.fixture(scope="function")
@@ -114,6 +114,37 @@ def processor_functions_routed(request: SubRequest) -> List[ProcessorFunction]:
 
     return _create_functions(request)
 
+
+@pytest.fixture(scope="function")
+def processor_functions_hierarchical(request: SubRequest) -> List[ProcessorFunction]:
+    reload(src.mqttprocessor.functions)
+    converter = src.mqttprocessor.functions.converter
+
+    @converter
+    def dummy_routed_dict_hierarchical(x):
+        return routedmessage({
+            "dict/routed/destination/topic": routedmessage(
+                [
+                    x + "<dict-hierarchical1>",
+                    x + "<dict-hierarchical2>",
+                ]
+            )
+        })
+
+    @converter
+    def dummy_routed_dict_multiple_hierarchical(x):
+        return routedmessage({
+            "multiroute-dict/routed/destination/topic1": routedmessage([
+                x + "<hierarchical-dict-multiple1-1>",
+                x + "<hierarchical-dict-multiple1-2>"
+            ]),
+            "multiroute-dict/routed/destination/topic2": routedmessage([
+                x + "<hierarchical-dict-multiple2-1>",
+                x + "<hierarchical-dict-multiple2-2>"
+            ]),
+        })
+
+    return _create_functions(request)
 
 def _create_functions(request: SubRequest) -> List[ProcessorFunction]:
     register = src.mqttprocessor.functions.create_processor_register()
