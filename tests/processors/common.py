@@ -26,9 +26,3 @@ def _create_single_source_processor(
     )
 
     return processor, source_topic, sink_topic
-
-
-# TODO:
-#  - multi processor test
-#     - topic matching
-#     - message processing for normal and single routed message
