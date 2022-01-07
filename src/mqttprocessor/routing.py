@@ -1,14 +1,11 @@
 import itertools
 import logging
-import inspect
-from functools import wraps
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Any
 
 from src.mqttprocessor.definitions import ProcessorFunctionType
 from src.mqttprocessor.messages import RoutedMessage, TopicName, Message, MessageBody
-from src.mqttprocessor.models import ProcessorConfigModel, ExtendedFunctionModel
-from src.mqttprocessor.functions import ProcessorFunction, create_processor_register, ProcessorFunctionDefinition, \
-    create_functions
+from src.mqttprocessor.models import ProcessorConfigModel
+from src.mqttprocessor.functions import ProcessorFunction, create_functions
 
 
 class SingleSourceProcessor:
@@ -49,11 +46,17 @@ class SingleSourceProcessor:
                 )
                 return None
 
+            try:
+                result = function.callback(message)
+            except Exception:
+                self._logger.exception("Function %s failed to execute", function.callback.__name__)
+                return None
+
             if function.ptype == ProcessorFunctionType.RULE:
-                if not function.callback(message):
+                if not result:
                     return None
             else:
-                message = function.callback(message)
+                message = result
 
         return message
 

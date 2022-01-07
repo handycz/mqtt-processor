@@ -178,3 +178,37 @@ def test_parametrized_processing_function(processor_functions: List[ProcessorFun
     assert actual[0].message_body == "base-message<concat-a+b=5+10=15>"
 
 
+@pytest.mark.parametrize(
+    "processor_functions",
+    [
+        ["dummy_str_failing"]
+    ], indirect=True
+)
+def test_failing_function(processor_functions: List[ProcessorFunction]):
+    processor, source, sink = _create_single_source_processor(
+        "single-processing-function", processor_functions
+    )
+
+    actual = processor.process_message(
+        source.rule, "base-message"
+    )
+
+    assert actual == []
+
+
+@pytest.mark.parametrize(
+    "processor_functions",
+    [
+        ["dummy_rule_failing"]
+    ], indirect=True
+)
+def test_failing_rule(processor_functions: List[ProcessorFunction]):
+    processor, source, sink = _create_single_source_processor(
+        "single-processing-function", processor_functions
+    )
+
+    actual = processor.process_message(
+        source.rule, "base-message"
+    )
+
+    assert actual == []

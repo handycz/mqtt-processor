@@ -64,6 +64,14 @@ def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
             "dict/routed/destination/topic": x + "<dict-routed>"
         })
 
+    @rule
+    def dummy_rule_failing(x):
+        raise Exception()
+
+    @converter
+    def dummy_str_failing(x):
+        raise Exception()
+
     return _create_functions(request)
 
 
