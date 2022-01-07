@@ -64,6 +64,20 @@ def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
             "dict/routed/destination/topic": x + "<dict-routed>"
         })
 
+    return _create_functions(request)
+
+
+@pytest.fixture(scope="function")
+def processor_functions_routed(request: SubRequest) -> List[ProcessorFunction]:
+    reload(src.mqttprocessor.functions)
+    converter = src.mqttprocessor.functions.converter
+
+    @converter
+    def dummy_routed_dict(x):
+        return routedmessage({
+            "dict/routed/destination/topic": x + "<dict-routed>"
+        })
+
     @converter
     def dummy_routed_dict_multiple(x):
         return routedmessage({
@@ -75,9 +89,9 @@ def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
     @converter
     def dummy_routed_list(x):
         return routedmessage([
-            "<routed_list-msg1>",
-            "<routed_list-msg2>",
-            "<routed_list-msg3>"
+            x + "<routed_list-msg1>",
+            x + "<routed_list-msg2>",
+            x + "<routed_list-msg3>"
         ])
 
     @converter
@@ -85,9 +99,9 @@ def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
         return routedmessage((
             "tuple-of-lists/routed/destination/topic",
             [
-                "<routed_tuple_of_lists-msg1>",
-                "<routed_tuple_of_lists-msg2>",
-                "<routed_tuple_of_lists-msg3>"
+                x + "<routed_tuple_of_lists-msg1>",
+                x + "<routed_tuple_of_lists-msg2>",
+                x + "<routed_tuple_of_lists-msg3>"
             ]
         ))
 
@@ -95,9 +109,13 @@ def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
     def dummy_routed_tuple_containing_single(x):
         return routedmessage((
             "tuple/routed/destination/topic",
-            "<routed-tuple>"
+            x + "<routed-tuple>"
         ))
 
+    return _create_functions(request)
+
+
+def _create_functions(request: SubRequest) -> List[ProcessorFunction]:
     register = src.mqttprocessor.functions.create_processor_register()
     models = _create_function_models(request)
 
