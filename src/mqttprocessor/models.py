@@ -1,4 +1,5 @@
 import uuid
+from enum import Enum
 from typing import List, Optional, Any, Union, Dict
 
 import pydantic
@@ -13,6 +14,12 @@ class TopicNameModel(pydantic.BaseModel):
 
 class FunctionNameModel(pydantic.BaseModel):
     __root__: str
+
+
+class MessageFormat(Enum):
+    BINARY = "binary"
+    STRING = "string"
+    JSON = "json"
 
 
 class ExtendedFunctionModel(pydantic.BaseModel):
@@ -32,6 +39,8 @@ class ProcessorConfigModel(pydantic.BaseModel):
     source: List[TopicNameModel]
     sink: Optional[TopicNameModel]
     function: List[ExtendedFunctionModel]
+    input_format: Optional[MessageFormat] = MessageFormat.JSON
+    output_format: Optional[MessageFormat] = MessageFormat.JSON
 
     @pydantic.root_validator(pre=True)
     def unify_function_format(cls, values):
@@ -67,7 +76,7 @@ class ProcessorConfigModel(pydantic.BaseModel):
 
     @pydantic.root_validator
     def set_default_name(cls, values):
-        name, function = values.get('name'), values.get('function')
+        name, function = values.get("name"), values.get("function")
         if name is not None:
             return values
 

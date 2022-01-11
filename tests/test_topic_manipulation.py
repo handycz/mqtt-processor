@@ -84,6 +84,14 @@ def test_topic_name_dynamic_multilevel_compose():
     assert actual == expected
 
 
+def test_pattern_to_mqtt_format():
+    actual = TopicName(
+        "device1/{w1}/foo{w2}/bar/{W10}/property"
+    ).convert_rule_to_mqtt_format()
+
+    assert actual == "device1/*/foo*/bar/#/property"
+
+
 def test_pattern_creator_match_single_level():
     pattern_creator = RegexPatternCreator(
         "device1/{w1}/property"

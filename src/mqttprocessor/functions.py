@@ -53,7 +53,7 @@ def create_functions(
 
     for function_config in functions_config:
         if function_config.name.__root__ not in global_function_store:
-            raise ValueError(f"Function `{function_config.name}` undefined")
+            raise ValueError(f"Function `{function_config.name.__root__}` undefined")
 
         function_definition = global_function_store[function_config.name.__root__]
 

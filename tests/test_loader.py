@@ -11,6 +11,7 @@ from src.mqttprocessor.loader import load_config
     "config_file_stream",
     [
         "config_simple.yaml",
+        "config_with_input_format.yaml",
         "config_multiple_processors.yaml",
         "config_multiple_source_topics.yaml",
         "config_multiple_functions.yaml",

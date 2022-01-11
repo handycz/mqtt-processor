@@ -83,6 +83,22 @@ class TopicName:
             regex_creator = RegexPatternCreator(rule)
             self._regex_topic_name_extract = regex_creator.create_regex()
 
+    def convert_rule_to_mqtt_format(self) -> str:
+        if self._rule_is_static:
+            return self._rule
+
+        rule = self._rule
+        search_result = self._regex_topic_name_extract.search(rule)
+
+        groups = search_result.groupdict()
+        for group_id, value in groups.items():
+            if group_id.startswith("W"):
+                rule = rule.replace("{{{0}}}".format(group_id), "#")
+            else:
+                rule = rule.replace("{{{0}}}".format(group_id), "*")
+
+        return rule
+
     def matches(self, topic_rule: 'TopicName') -> bool:
         checked_topic_name = topic_rule.rule
 

@@ -1,0 +1,5 @@
+processors:
+  - source: src/topic
+    sink: sink/topic
+    input_format: binary
+    function: some_function

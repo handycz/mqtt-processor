@@ -4,7 +4,7 @@ from typing import List, Optional, Any
 
 from src.mqttprocessor.definitions import ProcessorFunctionType
 from src.mqttprocessor.messages import RoutedMessage, TopicName, Message, MessageBody
-from src.mqttprocessor.models import ProcessorConfigModel
+from src.mqttprocessor.models import ProcessorConfigModel, MessageFormat, ExtendedFunctionModel
 from src.mqttprocessor.functions import ProcessorFunction, create_functions
 
 
@@ -14,6 +14,10 @@ class SingleSourceProcessor:
     _source_topic_rule: TopicName
     _functions: List[ProcessorFunction]
     _default_sink_topic: Optional[TopicName]
+
+    @property
+    def source_topic(self) -> TopicName:
+        return TopicName(self._source_topic_rule.rule)
 
     def __init__(
             self, name: str, functions: List[ProcessorFunction],
@@ -153,6 +157,12 @@ class Processor:
     _logger: logging.Logger
     _processors: List[SingleSourceProcessor]
 
+    @property
+    def source_topics(self) -> List[TopicName]:
+        return [
+            p.source_topic for p in self._processors
+        ]
+
     def __init__(self, name: str, functions: List[ProcessorFunction], sources: List[TopicName], sink: TopicName):
         self._logger = logging.getLogger(__name__ + "=" + name)
 
@@ -188,6 +198,18 @@ class ProcessorCreator:
 
     def __init__(self, processor_config: ProcessorConfigModel):
         self._config = processor_config
+        self._add_input_output_formatting()
+
+    def _add_input_output_formatting(self):
+        if self._config.input_format == MessageFormat.STRING:
+            self._config.function.insert(0, ExtendedFunctionModel(name="binary_to_string"))
+        elif self._config.input_format == MessageFormat.JSON:
+            self._config.function.insert(0, ExtendedFunctionModel(name="binary_to_json"))
+
+        if self._config.output_format == MessageFormat.STRING:
+            self._config.function.append(ExtendedFunctionModel(name="string_to_binary"))
+        elif self._config.output_format == MessageFormat.JSON:
+            self._config.function.append(ExtendedFunctionModel(name="json_to_binary"))
 
     def create(self) -> Processor:
         return Processor(
