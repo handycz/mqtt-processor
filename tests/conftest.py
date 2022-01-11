@@ -154,6 +154,7 @@ def processor_functions_hierarchical(request: SubRequest) -> List[ProcessorFunct
 
     return _create_functions(request)
 
+
 def _create_functions(request: SubRequest) -> List[ProcessorFunction]:
     register = src.mqttprocessor.functions.create_processor_register()
     models = _create_function_models(request)

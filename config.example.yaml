@@ -3,4 +3,3 @@ processors:
     sink: cirkus/humberto/sink
     function: dostuff
     input_format: json
-    output_format: json

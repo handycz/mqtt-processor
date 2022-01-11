@@ -9,7 +9,6 @@ logging.basicConfig(level=logging.DEBUG)
 
 @converter
 def dostuff(x):
-    print(x)
     x['val'] = x['val'] * 10
 
     return x

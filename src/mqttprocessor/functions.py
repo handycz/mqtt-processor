@@ -2,6 +2,7 @@ import inspect
 import logging
 from dataclasses import dataclass
 from functools import wraps
+from importlib import import_module
 from typing import Dict, List
 
 from .definitions import BodyType, RawRuleType, RawConverterType, ProcessorFunctionType, ConverterType, RuleType
@@ -44,6 +45,8 @@ def create_functions(
         functions_config: List[ExtendedFunctionModel],
         register: Dict[str, ProcessorFunctionDefinition] = None
 ) -> List[ProcessorFunction]:
+    import_module(".builtin", "src.mqttprocessor")
+
     functions = list()
 
     if register is None:
