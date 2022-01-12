@@ -2,7 +2,7 @@ from typing import TextIO
 
 import yaml
 
-from src.mqttprocessor.models import ConfigModel
+from mqttprocessor.models import ConfigModel
 
 
 def load_config(stream: TextIO) -> ConfigModel:

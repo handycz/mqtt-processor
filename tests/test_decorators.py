@@ -2,8 +2,8 @@ from typing import Callable
 
 import pytest
 
-from src.mqttprocessor.functions import create_processor_register
-from src.mqttprocessor.definitions import ProcessorFunctionType
+from mqttprocessor.functions import create_processor_register
+from mqttprocessor.definitions import ProcessorFunctionType
 
 
 def test_rule_registration(rule: Callable):

@@ -1,5 +1,5 @@
 processors:
-  - source: cirkus/humberto/src
+  - source: cirkus/humberto/mqtt-processor
     sink: cirkus/humberto/sink
     function: dostuff
     input_format: json

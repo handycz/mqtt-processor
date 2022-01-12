@@ -1,6 +1,6 @@
 import json
 
-from src.mqttprocessor.functions import converter
+from mqttprocessor.functions import converter
 
 
 @converter

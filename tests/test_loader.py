@@ -4,7 +4,7 @@ from typing import TextIO
 import pytest
 from pydantic import ValidationError
 
-from src.mqttprocessor.loader import load_config
+from mqttprocessor.loader import load_config
 
 
 @pytest.mark.parametrize(

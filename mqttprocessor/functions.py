@@ -45,7 +45,7 @@ def create_functions(
         functions_config: List[ExtendedFunctionModel],
         register: Dict[str, ProcessorFunctionDefinition] = None
 ) -> List[ProcessorFunction]:
-    import_module(".builtin", "src.mqttprocessor")
+    import_module(".builtin", "mqttprocessor")
 
     functions = list()
 

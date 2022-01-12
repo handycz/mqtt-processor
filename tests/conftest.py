@@ -5,24 +5,24 @@ from typing import TextIO, List
 import pytest
 from _pytest.fixtures import SubRequest
 
-import src.mqttprocessor.functions
-from src.mqttprocessor.functions import ProcessorFunction, create_functions, ProcessorFunctionDefinition
-from src.mqttprocessor.messages import routedmessage
-from src.mqttprocessor.models import ExtendedFunctionModel
+import mqttprocessor.functions
+from mqttprocessor.functions import ProcessorFunction, create_functions
+from mqttprocessor.messages import routedmessage
+from mqttprocessor.models import ExtendedFunctionModel
 
 
 @pytest.fixture(scope="function")
-def rule() -> type(src.mqttprocessor.functions.rule):
-    reload(src.mqttprocessor.functions)
+def rule() -> type(mqttprocessor.functions.rule):
+    reload(mqttprocessor.functions)
 
-    return src.mqttprocessor.functions.rule
+    return mqttprocessor.functions.rule
 
 
 @pytest.fixture(scope="function")
-def converter() -> type(src.mqttprocessor.functions.converter):
-    reload(src.mqttprocessor.functions)
+def converter() -> type(mqttprocessor.functions.converter):
+    reload(mqttprocessor.functions)
 
-    return src.mqttprocessor.functions.converter
+    return mqttprocessor.functions.converter
 
 
 @pytest.fixture(scope="function")
@@ -34,9 +34,9 @@ def config_file_stream(request: SubRequest) -> TextIO:
 
 @pytest.fixture(scope="function")
 def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
-    reload(src.mqttprocessor.functions)
-    rule = src.mqttprocessor.functions.rule
-    converter = src.mqttprocessor.functions.converter
+    reload(mqttprocessor.functions)
+    rule = mqttprocessor.functions.rule
+    converter = mqttprocessor.functions.converter
 
     @rule
     def dummy_rule_false(x):
@@ -77,8 +77,8 @@ def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
 
 @pytest.fixture(scope="function")
 def processor_functions_routed(request: SubRequest) -> List[ProcessorFunction]:
-    reload(src.mqttprocessor.functions)
-    converter = src.mqttprocessor.functions.converter
+    reload(mqttprocessor.functions)
+    converter = mqttprocessor.functions.converter
 
     @converter
     def dummy_routed_dict(x):
@@ -125,8 +125,8 @@ def processor_functions_routed(request: SubRequest) -> List[ProcessorFunction]:
 
 @pytest.fixture(scope="function")
 def processor_functions_hierarchical(request: SubRequest) -> List[ProcessorFunction]:
-    reload(src.mqttprocessor.functions)
-    converter = src.mqttprocessor.functions.converter
+    reload(mqttprocessor.functions)
+    converter = mqttprocessor.functions.converter
 
     @converter
     def dummy_routed_dict_hierarchical(x):
@@ -156,7 +156,7 @@ def processor_functions_hierarchical(request: SubRequest) -> List[ProcessorFunct
 
 
 def _create_functions(request: SubRequest) -> List[ProcessorFunction]:
-    register = src.mqttprocessor.functions.create_processor_register()
+    register = mqttprocessor.functions.create_processor_register()
     models = _create_function_models(request)
 
     return create_functions(

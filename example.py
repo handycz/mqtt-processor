@@ -1,7 +1,7 @@
 import logging
 
-from src.mqttprocessor.app import run
-from src.mqttprocessor.functions import converter
+from mqttprocessor.app import run
+from mqttprocessor.functions import converter
 
 
 logging.basicConfig(level=logging.DEBUG)

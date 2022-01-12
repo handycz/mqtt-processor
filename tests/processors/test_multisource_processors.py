@@ -2,9 +2,9 @@ from typing import List
 
 import pytest
 
-from src.mqttprocessor.messages import TopicName, Message
-from src.mqttprocessor.functions import ProcessorFunction
-from src.mqttprocessor.routing import Processor
+from mqttprocessor.messages import TopicName, Message
+from mqttprocessor.functions import ProcessorFunction
+from mqttprocessor.routing import Processor
 
 
 @pytest.mark.parametrize(

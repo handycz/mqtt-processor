@@ -2,8 +2,8 @@ from typing import List
 
 import pytest
 
-from src.mqttprocessor.messages import TopicName, Message
-from src.mqttprocessor.functions import ProcessorFunction
+from mqttprocessor.messages import TopicName, Message
+from mqttprocessor.functions import ProcessorFunction
 
 from tests.processors.common import _create_single_source_processor
 

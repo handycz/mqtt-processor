@@ -2,10 +2,10 @@ import itertools
 import logging
 from typing import List, Optional, Any
 
-from src.mqttprocessor.definitions import ProcessorFunctionType
-from src.mqttprocessor.messages import RoutedMessage, TopicName, Message, MessageBody
-from src.mqttprocessor.models import ProcessorConfigModel, MessageFormat, ExtendedFunctionModel
-from src.mqttprocessor.functions import ProcessorFunction, create_functions
+from mqttprocessor.definitions import ProcessorFunctionType
+from mqttprocessor.messages import RoutedMessage, TopicName, Message, MessageBody
+from mqttprocessor.models import ProcessorConfigModel, MessageFormat, ExtendedFunctionModel
+from mqttprocessor.functions import ProcessorFunction, create_functions
 
 
 class SingleSourceProcessor:

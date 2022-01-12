@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass
 from typing import Dict, Any, Iterable, Pattern, Set, List, Sequence
 
-from src.mqttprocessor.models import TOPIC_NAME_REGEX_PATTERN
+from mqttprocessor.models import TOPIC_NAME_REGEX_PATTERN
 
 
 class PatternGroupCreator:

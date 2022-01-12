@@ -1,8 +1,8 @@
 from typing import List, Tuple
 
-from src.mqttprocessor.functions import ProcessorFunction
-from src.mqttprocessor.messages import TopicName
-from src.mqttprocessor.routing import SingleSourceProcessor
+from mqttprocessor.functions import ProcessorFunction
+from mqttprocessor.messages import TopicName
+from mqttprocessor.routing import SingleSourceProcessor
 
 
 def _create_single_source_processor(

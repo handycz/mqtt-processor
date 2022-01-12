@@ -1,6 +1,6 @@
 import pytest
 
-from src.mqttprocessor.messages import RegexPatternCreator, TopicName
+from mqttprocessor.messages import RegexPatternCreator, TopicName
 
 
 def test_topic_name_invalid_rule():
