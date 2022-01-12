@@ -27,7 +27,7 @@ def converter() -> type(mqttprocessor.functions.converter):
 
 @pytest.fixture(scope="function")
 def config_file_stream(request: SubRequest) -> TextIO:
-    path = Path("testcase_files/config/" + request.param)
+    path = Path("tests/testcase_files/config/" + request.param)
     with open(path, "r") as f:
         yield f
 
