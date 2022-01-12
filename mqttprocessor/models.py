@@ -40,7 +40,6 @@ class ProcessorConfigModel(pydantic.BaseModel):
     sink: Optional[TopicNameModel]
     function: List[ExtendedFunctionModel]
     input_format: Optional[MessageFormat] = MessageFormat.JSON
-    output_format: Optional[MessageFormat] = MessageFormat.JSON
 
     @pydantic.root_validator(pre=True)
     def unify_function_format(cls, values):

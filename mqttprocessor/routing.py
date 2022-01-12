@@ -234,11 +234,6 @@ class ProcessorCreator:
                 0, ExtendedFunctionModel(name="binary_to_json")
             )
 
-        if self._config.output_format == MessageFormat.STRING:
-            self._config.function.append(ExtendedFunctionModel(name="string_to_binary"))
-        elif self._config.output_format == MessageFormat.JSON:
-            self._config.function.append(ExtendedFunctionModel(name="json_to_binary"))
-
     def create(self) -> Processor:
         return Processor(
             name=self._config.name,
