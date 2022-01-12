@@ -49,7 +49,9 @@ class ProcessorConfigModel(pydantic.BaseModel):
 
         function = values["function"]
         if isinstance(function, list):
-            values["function"] = [cls._normalize_single_function(func) for func in function]
+            values["function"] = [
+                cls._normalize_single_function(func) for func in function
+            ]
         else:
             values["function"] = [cls._normalize_single_function(function)]
 
@@ -57,7 +59,7 @@ class ProcessorConfigModel(pydantic.BaseModel):
 
     @classmethod
     def _normalize_single_function(
-            cls, function: str | Dict[str, Any]
+        cls, function: str | Dict[str, Any]
     ) -> Dict[str, Any]:
         if isinstance(function, str):
             return {"name": function}

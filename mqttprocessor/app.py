@@ -33,13 +33,15 @@ class EnvParameters:
 def _load_env() -> EnvParameters:
     return EnvParameters(
         mqtt=EnvParameters.Mqtt(
-            client_id=os.getenv("MQTT_CLIENT_ID", f"MqttProcessor-{random.randint(0, 1000)}"),
+            client_id=os.getenv(
+                "MQTT_CLIENT_ID", f"MqttProcessor-{random.randint(0, 1000)}"
+            ),
             host=os.getenv("MQTT_HOST"),
             port=os.getenv("MQTT_PORT", 1883),
             username=os.getenv("MQTT_USERNAME"),
-            password=os.getenv("MQTT_PASSWORD")
+            password=os.getenv("MQTT_PASSWORD"),
         ),
-        config_file_path=os.getenv("CONFIG_FILE", "config.yaml")
+        config_file_path=os.getenv("CONFIG_FILE", "config.yaml"),
     )
 
 
@@ -50,7 +52,9 @@ def _create_processors(config_file_path: str) -> List[Processor]:
     return [ProcessorCreator(proc).create() for proc in config.processors]
 
 
-def _create_mqtt_client(processors: List[Processor], mqtt_config: EnvParameters.Mqtt) -> Client:
+def _create_mqtt_client(
+    processors: List[Processor], mqtt_config: EnvParameters.Mqtt
+) -> Client:
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
             _logger.info("MQTT client connected!")
@@ -58,9 +62,7 @@ def _create_mqtt_client(processors: List[Processor], mqtt_config: EnvParameters.
             _logger.error("MQTT client connection failed with code %s", rc)
 
     def on_message(client, userdata, message: MQTTMessage):
-        _ingress_queue.put(
-            message
-        )
+        _ingress_queue.put(message)
 
     client = Client(mqtt_config.client_id)
     if mqtt_config.username is not None and mqtt_config.password is not None:
@@ -86,8 +88,7 @@ def _process_messages(processors: List[Processor], mqtt_client: Client):
         received_message = _ingress_queue.get()
         for processor in processors:
             output_messages += processor.process_message(
-                received_message.topic,
-                received_message.payload
+                received_message.topic, received_message.payload
             )
 
         while len(output_messages) > 0:
@@ -96,7 +97,7 @@ def _process_messages(processors: List[Processor], mqtt_client: Client):
                 msg.sink_topic.rule,
                 msg.message_body,
                 qos=received_message.qos,
-                retain=received_message.retain
+                retain=received_message.retain,
             )
 
 

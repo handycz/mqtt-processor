@@ -21,6 +21,3 @@ def json_to_binary(json_data: bytes):
 @converter
 def string_to_binary(string: bytes, encoding="utf8"):
     return string.decode(encoding=encoding)
-
-
-

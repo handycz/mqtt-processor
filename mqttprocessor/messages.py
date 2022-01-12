@@ -16,7 +16,9 @@ class PatternGroupCreator:
             return "(?P={name})".format(name=group_name)
         else:
             self._existing_groups.add(group_name)
-            return "(?P<{name}>{pattern})".format(name=group_name, pattern=expected_pattern)
+            return "(?P<{name}>{pattern})".format(
+                name=group_name, pattern=expected_pattern
+            )
 
 
 class RegexPatternCreator:
@@ -36,18 +38,20 @@ class RegexPatternCreator:
         pattern_levels = []
         for level in self._rule:
             level = self._SINGLE_LEVEL_REGEX.sub(
-                lambda m: pattern_creator.get_pattern(m.groups()[0], self._SINGLE_LEVEL_PATTERN),
-                level
+                lambda m: pattern_creator.get_pattern(
+                    m.groups()[0], self._SINGLE_LEVEL_PATTERN
+                ),
+                level,
             )
 
             level = self._MULTI_LEVEL_REGEX.sub(
-                lambda m: pattern_creator.get_pattern(m.groups()[0], self._MULTI_LEVEL_PATTERN),
-                level
+                lambda m: pattern_creator.get_pattern(
+                    m.groups()[0], self._MULTI_LEVEL_PATTERN
+                ),
+                level,
             )
 
-            pattern_levels.append(
-                level
-            )
+            pattern_levels.append(level)
 
         return self._create_regex_from_levels(pattern_levels)
 
@@ -99,7 +103,7 @@ class TopicName:
 
         return rule
 
-    def matches(self, topic_rule: 'TopicName') -> bool:
+    def matches(self, topic_rule: "TopicName") -> bool:
         checked_topic_name = topic_rule.rule
 
         if self._rule_is_static:
@@ -107,7 +111,9 @@ class TopicName:
 
         return self._regex_topic_name_extract.match(checked_topic_name) is not None
 
-    def compose_sink_topic_from_source(self, extract_from: 'TopicName', embed_into: 'TopicName') -> 'TopicName':
+    def compose_sink_topic_from_source(
+        self, extract_from: "TopicName", embed_into: "TopicName"
+    ) -> "TopicName":
         if self._rule_is_static:
             return embed_into
 
@@ -138,13 +144,15 @@ class TopicName:
         return True
 
     def __repr__(self) -> str:
-        return "TopicName(rule={0}, static={1})".format(self._rule, self._rule_is_static)
+        return "TopicName(rule={0}, static={1})".format(
+            self._rule, self._rule_is_static
+        )
 
 
 @dataclass(frozen=True)
 class Message:
     sink_topic: TopicName
-    message_body: 'MessageBody'
+    message_body: "MessageBody"
 
 
 class RoutedMessage:
@@ -163,17 +171,21 @@ class RoutedMessage:
 
     @property
     def is_single_route_and_list_of_messages(self) -> bool:
-        return isinstance(self.payload, tuple) \
-                and len(self.payload) == 2 \
-                and isinstance(self.payload[0], str) \
-                and isinstance(self.payload[1], list)
+        return (
+            isinstance(self.payload, tuple)
+            and len(self.payload) == 2
+            and isinstance(self.payload[0], str)
+            and isinstance(self.payload[1], list)
+        )
 
     @property
     def is_single_route_and_single_message(self) -> bool:
-        return isinstance(self.payload, tuple) \
-                and len(self.payload) == 2 \
-                and isinstance(self.payload[0], str) \
-                and not isinstance(self.payload[1], list)
+        return (
+            isinstance(self.payload, tuple)
+            and len(self.payload) == 2
+            and isinstance(self.payload[0], str)
+            and not isinstance(self.payload[1], list)
+        )
 
 
 MessageBody = Any

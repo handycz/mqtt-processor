@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "mqtt-processor"
+name = "mqttprocessor"
 version = "0.1.0"
-description = "Customizable application that receives MQTT messages, filters or changes the message and re-sends it to another topic\""
+description = "Customizable application that receives MQTT messages, filters or changes the message and re-sends it to another topic"
 authors = ["Ondřej Novák <onno.cz@gmail.com>"]
 license = "MIT"
 
@@ -13,6 +13,7 @@ paho-mqtt = "^1.6.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
+black = "^21.12b0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

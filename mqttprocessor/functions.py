@@ -5,10 +5,17 @@ from functools import wraps
 from importlib import import_module
 from typing import Dict, List
 
-from .definitions import BodyType, RawRuleType, RawConverterType, ProcessorFunctionType, ConverterType, RuleType
+from .definitions import (
+    BodyType,
+    RawRuleType,
+    RawConverterType,
+    ProcessorFunctionType,
+    ConverterType,
+    RuleType,
+)
 from .models import ExtendedFunctionModel
 
-_REGISTERED_PROCESSOR_FUNCTIONS: Dict[str, 'ProcessorFunctionDefinition'] = dict()
+_REGISTERED_PROCESSOR_FUNCTIONS: Dict[str, "ProcessorFunctionDefinition"] = dict()
 
 _logger = logging.getLogger(__name__)
 
@@ -42,8 +49,8 @@ class ProcessorFunction:
 
 
 def create_functions(
-        functions_config: List[ExtendedFunctionModel],
-        register: Dict[str, ProcessorFunctionDefinition] = None
+    functions_config: List[ExtendedFunctionModel],
+    register: Dict[str, ProcessorFunctionDefinition] = None,
 ) -> List[ProcessorFunction]:
     import_module(".builtin", "mqttprocessor")
 
@@ -63,15 +70,14 @@ def create_functions(
         _verify_function_arguments(function_config, function_definition)
         function = _create_function_representation(function_config, function_definition)
 
-        functions.append(
-            function
-        )
+        functions.append(function)
 
     return functions
 
 
 def _verify_function_arguments(
-        function_config: ExtendedFunctionModel, function_definition: ProcessorFunctionDefinition
+    function_config: ExtendedFunctionModel,
+    function_definition: ProcessorFunctionDefinition,
 ):
     function_signature = inspect.signature(function_definition.callback)
     number_of_nondefault_params = [
@@ -87,35 +93,31 @@ def _verify_function_arguments(
 
 
 def _create_function_representation(
-        function_config: ExtendedFunctionModel, function_definition: ProcessorFunctionDefinition
+    function_config: ExtendedFunctionModel,
+    function_definition: ProcessorFunctionDefinition,
 ) -> ProcessorFunction:
     @wraps(function_definition.callback)
     def _cbk_wrapper(val):
         return function_definition.callback(val, *function_config.arguments)
 
-    return ProcessorFunction(
-        function_definition.ptype,
-        _cbk_wrapper
-    )
+    return ProcessorFunction(function_definition.ptype, _cbk_wrapper)
 
 
-def _register_processor_function(name: str, func: RawRuleType | RawConverterType, ptype: ProcessorFunctionType):
+def _register_processor_function(
+    name: str, func: RawRuleType | RawConverterType, ptype: ProcessorFunctionType
+):
     _logger.info("Registering function %s", name)
     if name in _REGISTERED_PROCESSOR_FUNCTIONS:
         _logger.error("Function '%s' already registered", name)
         raise ValueError("Names must be unique")
 
     _REGISTERED_PROCESSOR_FUNCTIONS[name] = ProcessorFunctionDefinition(
-        name=name,
-        ptype=ptype,
-        callback=func
+        name=name, ptype=ptype, callback=func
     )
 
 
 def create_processor_register() -> Dict[str, ProcessorFunctionDefinition]:
-    return dict(
-        _REGISTERED_PROCESSOR_FUNCTIONS
-    )
+    return dict(_REGISTERED_PROCESSOR_FUNCTIONS)
 
 
 def rule(original_function=None, *, name: str = None):
@@ -129,6 +131,7 @@ def rule(original_function=None, *, name: str = None):
         @wraps(func)
         def wrapper(body: BodyType):
             func(body)
+
         return wrapper
 
     if original_function is not None:
@@ -147,6 +150,7 @@ def converter(original_function=None, *, name: str = None):
         @wraps(func)
         def wrapper(body: BodyType):
             func(body)
+
         return wrapper
 
     if original_function is not None:
