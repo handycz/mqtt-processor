@@ -27,7 +27,8 @@ installed by running `poetry add git+https://github.com/handycz/mqtt-processor`.
   - Converters are functions that produce an outgoing message based on and ingoing message. 
     - A converter can return multiple messages, that can be sent to single or several sink topics. These are called 
     routed messages.
-
+- Input messages can be automatically formatted from `bytes` to `string` (utf8 encoding) or `json`. 
+  Example [here](#simple-configuration). Output messages are automatically encoded from `string` and `json`.
 
 ## Configuration examples
 ### Simple configuration
@@ -37,6 +38,7 @@ it to `sink/topic`.
 processors:
   - source: src/topic
     sink: sink/topic
+    input_format: json # possible values: binary, string, json (default - json)
     function: my_processing_function
   - name: my-processor # you can optionally specify processor's name 
     source: device1/raw
@@ -112,9 +114,58 @@ processors:
 ```
 
 
-### Writing converters and rules
-The Python functions
-### Routed messages
+## Writing converters and rules
+The functions can be implemented by standard python functions taking at least one argument. Functions have to be
+decorated by either `@rule` or `@converter`. Then, the function can be addressed in the YAML file by its name, or by 
+name override given by `@rule(name="my_rule")` or `@converter(name="my_converter")`. 
 
+Any of these functions may accept more than one parameter. Values from `arguments` structure in the YAML
+config are then passed to the function.
+
+### Rule
+Rule function is expected to return boolean. For example:
+```python
+from mqttprocessor.functions import rule
+
+@rule
+def temp_greater_than(message, bound):
+  return int(message['temperature']) > bound
+```
+
+
+### Converter
+The converter can either return `bytes`, `str`, a structure serializable to `json` or a `RoutedMessage` consisting 
+of the other three data formats. For example:
+
+```python
+from mqttprocessor.functions import converter
+
+@converter
+def temp_kelvin_to_celsius(message):
+  message['temperature'] = message['temperature'] - 273.15
+  return message
+```
+
+Or for a `RoutedMessage`, where a message is split to two messages and sent to two separate topics
+`device1/temperature` and `device1/pressure`.
+
+```python
+from mqttprocessor.functions import converter
+from mqttprocessor.messages import routedmessage
+
+@converter
+def decode_binary(message: bytes):
+  
+  return routedmessage({
+    "device1/temperature": str(bytes[0]),
+    "device1/pressure": str(bytes[1]),
+  })
+```
+
+
+### Routed messages
+TODO: Routed message types
+TODO: Hierarchical routed messages
+TODO: wildcards
 
 ### Creating runnable application
