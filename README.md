@@ -63,7 +63,7 @@ processors:
 ```
 
 ### Wildcard routing
-It is even possible to use wildcard source topics and use the values masked by wildcards in the sink topic.
+It is possible to use wildcard source topics and use the values masked by wildcards in the sink topic.
 In the example below, the app subscribes to topic `*/binary_temperature`. For message received from 
 `device123/binary_temperature` it sends the processed message to `device123/formatted_temperature`. The same can be 
 used with topics given by routed messages.
@@ -157,15 +157,131 @@ from mqttprocessor.messages import routedmessage
 def decode_binary(message: bytes):
   
   return routedmessage({
-    "device1/temperature": str(bytes[0]),
-    "device1/pressure": str(bytes[1]),
+    "device1/temperature": str(message[0]),
+    "device1/pressure": str(message[1]),
   })
 ```
 
 
 ### Routed messages
-TODO: Routed message types
-TODO: Hierarchical routed messages
-TODO: wildcards
+Routed messages allow you to send one or more messages to one or more topics. Routed messages are of type `list`, `dict`
+or `tuple` and wrapped by `routedmessage()`. The object is then split to individual messages with different sink topics.
+In case of list, where the topic is not given by the routed message, default topic from the configuration file is used.
+ 
+#### Multiple messages to single topic
+If it's needed to send _multiple messages to the default topic_, `list` of messages can be used. Here, the sink topic 
+is given by the configuration file. Snippet below produces three separate messages sent to the default sink.
+```python
+from mqttprocessor.functions import converter
+from mqttprocessor.messages import routedmessage
+
+@converter
+def demo_converter(message):
+    body_of_message_1 = ...
+    body_of_message_2 = ...
+    body_of_message_3 = ...
+  
+    return routedmessage([
+        body_of_message_1, body_of_message_2, body_of_message_3
+    ])
+```
+
+#### Single message to single topic
+To send a _single message to a non-default topic_, `tuple` consisting of topic name and message itself can be used.
+Function produces a message that is sent to `destination/topic`.
+```python
+from mqttprocessor.functions import converter
+from mqttprocessor.messages import routedmessage
+
+@converter
+def demo_converter(message):
+    body_of_message = ...
+  
+    return routedmessage((
+      "destination/topic", body_of_message
+    ))
+```
+
+#### Multiple messages to multiple unique topics
+When there is a need to send _multiple messages to multiple unique topics_, `dict` can be used. Following function
+produces three messages, each sent to one of topics `topic1`, `topic2`, `topic3`.
+```python
+from mqttprocessor.functions import converter
+from mqttprocessor.messages import routedmessage
+
+@converter
+def demo_converter(message):
+    body_of_message_1 = ...
+    body_of_message_2 = ...
+    body_of_message_3 = ...
+  
+    return routedmessage({
+      "topic1": body_of_message_1,
+      "topic2": body_of_message_2,
+      "topic3": body_of_message_3
+    })
+```
+#### Nested routed messages
+The body of the message can be another `routedmessage` object. If the topic is not given by the routed
+message, it is inherited from a parent. 
+
+#### Multiple messages to non-unique topics 
+Because `routedmessages` can be nested, we can send multiple messages to different topics as a `dict` of `routedmessage`
+or as a `list` of `tuple`. This would produce three messages. Message one and two would be sent to `topic1`, while
+third message would be sent to `topic10`.
+
+```python
+from mqttprocessor.functions import converter
+from mqttprocessor.messages import routedmessage
+
+@converter
+def demo_converter(message):
+    body_of_message_1 = ...
+    body_of_message_2 = ...
+    body_of_message_3 = ...
+  
+    return routedmessage({
+      "topic1": routedmessage([
+        body_of_message_1,
+        body_of_message_2
+      ]),
+      "topic10": body_of_message_3,
+    })
+```
+
+In similar way, one could achieve the same result by using the snippet consisting of list of tuples:
+```python
+from mqttprocessor.functions import converter
+from mqttprocessor.messages import routedmessage
+
+@converter
+def demo_converter(message):
+    body_of_message_1 = ...
+    body_of_message_2 = ...
+    body_of_message_3 = ...
+  
+    return routedmessage([
+      routedmessage(("topic1", body_of_message_1)),
+      routedmessage(("topic1", body_of_message_2)),
+      routedmessage(("topic10", body_of_message_3))
+    ])
+```
+
+#### Wildcards
+Wildcards can be used in the same way as when writing rules in the configuration file. If the application subscribes to
+topic `devices/{w1}/values/{w2}` and message arrives to `devices/deviceA/values/temperature`, a routed message
+given by`routedmessage(("values/{w2}"))` would be routed to `values/temperature`.
 
 ### Creating runnable application
+To create a simple app, it is necessary to define the rules and converters and call `run()` function from 
+`from mqttprocessor.app import run` at the bottom of the file. Parameters of the application are passed by environmental
+variables.
+
+| Name           | Default                            | Description                        |
+|----------------|------------------------------------|------------------------------------|
+| CONFIG_FILE    | `config.yaml`                      | Path to the configuration file     |
+| MQTT_HOST      | Required                           | Hostname or IP of the MQTT broker  |
+| MQTT_PORT      | 1883                               | Port of the MQTT broker            |
+| MQTT_USERNAME  | Ignored if empty                   | Username to access the MQTT broker | 
+| MQTT_PASSWORD  | Ignored if empty                   | Password to access the MQTT broker |  
+ | MQTT_CLIENT_ID | `MqttProcessor-{randint(0, 1000)}` | MQTT client ID                     |
