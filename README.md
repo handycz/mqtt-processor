@@ -14,7 +14,7 @@ installed by running `poetry add git+https://github.com/handycz/mqtt-processor`.
   is dynamically defined by individual processing functions.
 - Source topics can use wildcards. Values masked by wildcards can be used in sink topics. Example
   [here](#wildcard-routing)
-  - Use `{w1}`, `{w2}`, ..., `{wNNN}` for single-level wildcard, i.e., `*` character. 
+  - Use `{w1}`, `{w2}`, ..., `{wNNN}` for single-level wildcard, i.e., `+` character. 
   - Use `{W1}`, `{W2}`, ..., `{WNNN}` for multi-level wildcard, i.e., `#` character.
   - In the sink topic, the same wildcard can be used to insert masked value.
 - Every processor consists of one or more functions. Example [here](#chained-configuration)
@@ -64,7 +64,7 @@ processors:
 
 ### Wildcard routing
 It is possible to use wildcard source topics and use the values masked by wildcards in the sink topic.
-In the example below, the app subscribes to topic `*/binary_temperature`. For message received from 
+In the example below, the app subscribes to topic `+/binary_temperature`. For message received from 
 `device123/binary_temperature` it sends the processed message to `device123/formatted_temperature`. The same can be 
 used with topics given by routed messages.
 ```yaml
