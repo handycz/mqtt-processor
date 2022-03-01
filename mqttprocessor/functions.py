@@ -15,6 +15,8 @@ from .definitions import (
 )
 from .models import ExtendedFunctionModel
 
+_SPECIAL_PARAMETERS = ["source_topic", "matches"]
+
 _REGISTERED_PROCESSOR_FUNCTIONS: Dict[str, "ProcessorFunctionDefinition"] = dict()
 
 _logger = logging.getLogger(__name__)
@@ -46,6 +48,8 @@ class ProcessorFunctionDefinition:
 class ProcessorFunction:
     ptype: ProcessorFunctionType
     callback: RuleType | ConverterType
+    expects_matches: bool
+    expects_source_topic: bool
 
 
 def create_functions(
@@ -80,8 +84,14 @@ def _verify_function_arguments(
     function_definition: ProcessorFunctionDefinition,
 ):
     function_signature = inspect.signature(function_definition.callback)
+
+    non_special_parameters = filter(
+        lambda parameter: parameter.name not in _SPECIAL_PARAMETERS,
+        function_signature.parameters.values()
+    )
+
     number_of_nondefault_params = [
-        param.default for param in function_signature.parameters.values()
+        param.default for param in non_special_parameters
     ].count(inspect.Parameter.empty)
     num_args_in_config = len(function_config.arguments)
     num_params_of_function = number_of_nondefault_params - 1
@@ -100,7 +110,19 @@ def _create_function_representation(
     def _cbk_wrapper(val):
         return function_definition.callback(val, *function_config.arguments)
 
-    return ProcessorFunction(function_definition.ptype, _cbk_wrapper)
+    function_signature = inspect.signature(function_definition.callback)
+    function_parameter_names = filter(
+        lambda parameter: parameter.name,
+        function_signature.parameters.values()
+    )
+    expects_source_topic = "source_topic" in function_parameter_names
+    expects_matches = "matches" in function_parameter_names
+
+    return ProcessorFunction(
+        function_definition.ptype, _cbk_wrapper,
+        expects_source_topic=expects_source_topic,
+        expects_matches=expects_matches
+    )
 
 
 def _register_processor_function(
