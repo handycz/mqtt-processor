@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass
 from functools import wraps
 from importlib import import_module
-from typing import Dict, List
+from typing import Dict, List, Any
 
 from .definitions import (
     BodyType,
@@ -14,6 +14,8 @@ from .definitions import (
     RuleType,
 )
 from .models import ExtendedFunctionModel
+
+_SPECIAL_PARAMETERS = ["source_topic", "matches"]
 
 _REGISTERED_PROCESSOR_FUNCTIONS: Dict[str, "ProcessorFunctionDefinition"] = dict()
 
@@ -42,10 +44,31 @@ class ProcessorFunctionDefinition:
         return True
 
 
-@dataclass(frozen=True)
 class ProcessorFunction:
     ptype: ProcessorFunctionType
-    callback: RuleType | ConverterType
+
+    _callback: RuleType | ConverterType
+    _expects_matches: bool
+    _expects_source_topic: bool
+
+    def __init__(
+            self, ptype: ProcessorFunctionType, callback: RuleType | ConverterType,
+            expects_matches: bool, expects_source_topic: bool
+    ):
+        self.ptype = ptype
+        self._callback = callback
+        self._expects_matches = expects_matches
+        self._expects_source_topic = expects_source_topic
+
+    def callback(self, val: Any, source_topic: str, matches: Dict[str, str]):
+        special_params = dict()
+        if self._expects_matches:
+            special_params["matches"] = matches
+
+        if self._expects_source_topic:
+            special_params["source_topic"] = source_topic
+
+        return self._callback(val, special_params)
 
 
 def create_functions(
@@ -80,10 +103,16 @@ def _verify_function_arguments(
     function_definition: ProcessorFunctionDefinition,
 ):
     function_signature = inspect.signature(function_definition.callback)
+
+    non_special_parameters = filter(
+        lambda parameter: parameter.name not in _SPECIAL_PARAMETERS,
+        function_signature.parameters.values()
+    )
+
     number_of_nondefault_params = [
-        param.default for param in function_signature.parameters.values()
+        param.default for param in non_special_parameters
     ].count(inspect.Parameter.empty)
-    num_args_in_config = len(function_config.arguments)
+    num_args_in_config = len(function_config.arguments.items())
     num_params_of_function = number_of_nondefault_params - 1
     if num_args_in_config != num_params_of_function:
         raise ValueError(
@@ -97,10 +126,23 @@ def _create_function_representation(
     function_definition: ProcessorFunctionDefinition,
 ) -> ProcessorFunction:
     @wraps(function_definition.callback)
-    def _cbk_wrapper(val):
-        return function_definition.callback(val, *function_config.arguments)
+    def _cbk_wrapper(val: Any, special_params: Dict[str, Any]):
+        return function_definition.callback(val, **function_config.arguments, **special_params)
 
-    return ProcessorFunction(function_definition.ptype, _cbk_wrapper)
+    function_signature = inspect.signature(function_definition.callback)
+    function_parameter_names = list(map(
+        lambda parameter: parameter.name,
+        function_signature.parameters.values()
+    ))
+
+    expects_source_topic = "source_topic" in function_parameter_names
+    expects_matches = "matches" in function_parameter_names
+
+    return ProcessorFunction(
+        function_definition.ptype, _cbk_wrapper,
+        expects_source_topic=expects_source_topic,
+        expects_matches=expects_matches
+    )
 
 
 def _register_processor_function(

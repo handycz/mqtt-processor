@@ -1,6 +1,6 @@
 import uuid
 from enum import Enum
-from typing import List, Optional, Any, Union, Dict
+from typing import List, Optional, Any, Dict
 
 import pydantic
 
@@ -24,7 +24,7 @@ class MessageFormat(Enum):
 
 class ExtendedFunctionModel(pydantic.BaseModel):
     name: FunctionNameModel
-    arguments: Optional[List[Any]]
+    arguments: Optional[Dict[str, Any]]
 
     @pydantic.root_validator(pre=True)
     def args_set(cls, values):

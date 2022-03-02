@@ -6,6 +6,6 @@ processors:
       - basic_function2
       - name: expanded_function
         arguments:
-          - 1
-          - arg2
-          - 3.0
+          p1: 1
+          p2: arg2
+          p3: 3.0
