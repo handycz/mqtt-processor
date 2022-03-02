@@ -157,7 +157,7 @@ def test_plain_function_after_routed_function_processing_function(processor_func
 @pytest.mark.parametrize(
     "processor_functions",
     [
-        [("dummy_str_concat_with_params", 5, 10)]
+        [("dummy_str_concat_with_params", {"a": 5, "b": 10})]
     ], indirect=True
 )
 def test_parametrized_processing_function(processor_functions: List[ProcessorFunction]):

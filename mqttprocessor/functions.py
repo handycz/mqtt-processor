@@ -93,7 +93,7 @@ def _verify_function_arguments(
     number_of_nondefault_params = [
         param.default for param in non_special_parameters
     ].count(inspect.Parameter.empty)
-    num_args_in_config = len(function_config.arguments)
+    num_args_in_config = len(function_config.arguments.items())
     num_params_of_function = number_of_nondefault_params - 1
     if num_args_in_config != num_params_of_function:
         raise ValueError(
@@ -108,7 +108,7 @@ def _create_function_representation(
 ) -> ProcessorFunction:
     @wraps(function_definition.callback)
     def _cbk_wrapper(val):
-        return function_definition.callback(val, *function_config.arguments)
+        return function_definition.callback(val, **function_config.arguments)
 
     function_signature = inspect.signature(function_definition.callback)
     function_parameter_names = filter(

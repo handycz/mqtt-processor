@@ -174,9 +174,9 @@ def _create_function_models(request: SubRequest) -> List[ExtendedFunctionModel]:
     models = list()
 
     for func in functions:
-        if isinstance(func, tuple) and len(func) > 1:
+        if isinstance(func, tuple) and len(func) == 2:
             name = func[0]
-            args = func[1:]
+            args = func[1]
         else:
             name = func
             args = None
