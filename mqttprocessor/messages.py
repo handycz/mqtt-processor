@@ -103,13 +103,18 @@ class TopicName:
 
         return rule
 
-    def matches(self, topic_rule: "TopicName") -> bool:
+    def matches(self, topic_rule: "TopicName") -> Dict[str, str] | None:
         checked_topic_name = topic_rule.rule
 
         if self._rule_is_static:
-            return checked_topic_name == self._rule
+            return {} if checked_topic_name == self._rule else None
 
-        return self._regex_topic_name_extract.match(checked_topic_name) is not None
+        search_result = self._regex_topic_name_extract.search(checked_topic_name)
+
+        if search_result is None:
+            return None
+        else:
+            return search_result.groupdict()
 
     def compose_sink_topic_from_source(
         self, extract_from: "TopicName", embed_into: "TopicName"

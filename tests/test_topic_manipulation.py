@@ -12,7 +12,7 @@ def test_topic_name_invalid_rule():
 
 def test_topic_name_static_match():
     rule = TopicName("device1/device")
-    assert rule.matches(TopicName("device1/device"))
+    assert rule.matches(TopicName("device1/device")) == {}
 
 
 def test_topic_name_static_no_match():

@@ -1,6 +1,5 @@
 from enum import Enum
-from typing import Union, Protocol, Type, TYPE_CHECKING, Any, Callable
-
+from typing import Union, Protocol, Type, TYPE_CHECKING, Any, Callable, Dict
 
 if TYPE_CHECKING:
 
@@ -18,8 +17,8 @@ BodyType = str | bytes | JsonType
 RawRuleType = Callable[..., bool]
 RawConverterType = Callable[..., Any]
 
-RuleType = Callable[[Any], bool]
-ConverterType = Callable[[Any], Any]
+RuleType = Callable[[Any, Dict[str, Any]], bool]
+ConverterType = Callable[[Any, Dict[str, Any]], Any]
 
 
 class ProcessorFunctionType(Enum):

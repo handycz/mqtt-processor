@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass
 from functools import wraps
 from importlib import import_module
-from typing import Dict, List
+from typing import Dict, List, Any
 
 from .definitions import (
     BodyType,
@@ -44,12 +44,31 @@ class ProcessorFunctionDefinition:
         return True
 
 
-@dataclass(frozen=True)
 class ProcessorFunction:
     ptype: ProcessorFunctionType
-    callback: RuleType | ConverterType
-    expects_matches: bool
-    expects_source_topic: bool
+
+    _callback: RuleType | ConverterType
+    _expects_matches: bool
+    _expects_source_topic: bool
+
+    def __init__(
+            self, ptype: ProcessorFunctionType, callback: RuleType | ConverterType,
+            expects_matches: bool, expects_source_topic: bool
+    ):
+        self.ptype = ptype
+        self._callback = callback
+        self._expects_matches = expects_matches
+        self._expects_source_topic = expects_source_topic
+
+    def callback(self, val: Any, source_topic: str, matches: Dict[str, str]):
+        special_params = dict()
+        if self._expects_matches:
+            special_params["matches"] = matches
+
+        if self._expects_source_topic:
+            special_params["source_topic"] = source_topic
+
+        return self._callback(val, special_params)
 
 
 def create_functions(
@@ -107,14 +126,15 @@ def _create_function_representation(
     function_definition: ProcessorFunctionDefinition,
 ) -> ProcessorFunction:
     @wraps(function_definition.callback)
-    def _cbk_wrapper(val):
-        return function_definition.callback(val, **function_config.arguments)
+    def _cbk_wrapper(val: Any, special_params: Dict[str, Any]):
+        return function_definition.callback(val, **function_config.arguments, **special_params)
 
     function_signature = inspect.signature(function_definition.callback)
-    function_parameter_names = filter(
+    function_parameter_names = list(map(
         lambda parameter: parameter.name,
         function_signature.parameters.values()
-    )
+    ))
+
     expects_source_topic = "source_topic" in function_parameter_names
     expects_matches = "matches" in function_parameter_names
 

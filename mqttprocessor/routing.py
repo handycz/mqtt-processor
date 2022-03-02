@@ -1,6 +1,6 @@
 import itertools
 import logging
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Dict
 
 from mqttprocessor.definitions import ProcessorFunctionType
 from mqttprocessor.messages import RoutedMessage, TopicName, Message, MessageBody
@@ -42,18 +42,19 @@ class SingleSourceProcessor:
     ) -> List[Message]:
         actual_source_topic = TopicName(actual_source_topic)
 
-        if not self.source_topic_matches(actual_source_topic):
+        matches = self._source_topic_rule.matches(actual_source_topic)
+        if matches is None:
             return []
 
-        output_message_body = self._process_message_content(message)
+        output_message_body = self._process_message_content(message, actual_source_topic, matches)
         return self._create_message_with_destination(
             actual_source_topic, output_message_body
         )
 
-    def source_topic_matches(self, topic_rule: TopicName) -> bool:
-        return self._source_topic_rule.matches(topic_rule)
-
-    def _process_message_content(self, input_message: MessageBody) -> MessageBody:
+    def _process_message_content(
+            self, input_message: MessageBody, actual_source_topic: TopicName,
+            source_topic_matches: Dict[str, str]
+    ) -> MessageBody:
         message = input_message
         for function in self._functions:
             if isinstance(message, RoutedMessage):
@@ -64,7 +65,7 @@ class SingleSourceProcessor:
                 return None
 
             try:
-                result = function.callback(message)
+                result = function.callback(message, actual_source_topic.rule, source_topic_matches)
             except Exception:
                 self._logger.exception(
                     "Function %s failed to execute", function.callback.__name__
@@ -200,21 +201,13 @@ class Processor:
         ]
 
     def process_message(self, source_topic: str, message: MessageBody) -> List[Message]:
-        matched_processor = self._get_relevant_source_topic(TopicName(source_topic))
+        for processor in self._processors:
+            output_message = processor.process_message(source_topic, message)
 
-        if matched_processor is not None:
-            return matched_processor.process_message(source_topic, message)
+            if len(output_message) > 0:
+                return output_message
 
         return []
-
-    def _get_relevant_source_topic(
-        self, topic_rule: TopicName
-    ) -> Optional[SingleSourceProcessor]:
-        for processor in self._processors:
-            if processor.source_topic_matches(topic_rule):
-                return processor
-
-        return None
 
 
 class ProcessorCreator:

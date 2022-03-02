@@ -64,6 +64,18 @@ def processor_functions(request: SubRequest) -> List[ProcessorFunction]:
             "dict/routed/destination/topic": x + "<dict-routed>"
         })
 
+    @converter
+    def dummy_str_concat_source_topic(x, source_topic):
+        return f"{x}<{source_topic}>"
+
+    @converter
+    def dummy_str_concat_matches(x, matches):
+        return f"{x}<{matches}>"
+
+    @converter
+    def dummy_str_concat_source_topic_args(x, source_topic, param1, param2):
+        return f"{x}<{source_topic}><{param1}><{param2}>"
+
     @rule
     def dummy_rule_failing(x):
         raise Exception()
