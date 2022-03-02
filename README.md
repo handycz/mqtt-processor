@@ -77,7 +77,7 @@ processors:
 
 ### Function arguments
 To allow definition of generalized functions, it is possible to supply constant arguments. If the rule defined has
-more than the single "message" argument, arguments from config file are passed to the function. So for function
+more than the single "message" argument, arguments from config file are passed to the function as kwargs. So for function
 `def is_in_between(message, lower_bound, upper_bound)`, the below config can be used to define two different filters
 based on single rule function.
 ```yaml
@@ -87,15 +87,15 @@ processors:
     function: 
       name: is_in_between
       arguments:
-        - 0 # lower bound
-        - 10 # upper bound
+        lower_bound: 0 # lower bound
+        upper_bound: 10 # upper bound
   - source: device2/temperature
     sink: device2/filtered_temperature
     function: 
       name: is_in_between
       arguments:
-        - -10 # lower bound
-        -  25 # upper bound
+        lower_bound: -10 # lower bound
+        upper_bound:  25 # upper bound
 ```
 
 Of course, this can be also used when chaining functions, so with functions `def is_greater_than(message, bound)` and
@@ -107,12 +107,11 @@ processors:
     function:
       - name: is_greater_than
         arguments:
-          - 0
+          bound: 0
       - name: is_lower_than
         arguments:
-          - 25
+          bound: 25
 ```
-
 
 ## Writing converters and rules
 The functions can be implemented by standard python functions taking at least one argument. Functions have to be
@@ -161,6 +160,9 @@ def decode_binary(message: bytes):
     "device1/pressure": str(message[1]),
   })
 ```
+
+### Special parameters
+Every rule or converter can be passed the source topic of the message and wildcard matches just by adding `source_topic` and/or `matches` parameters to the respective function implementation. So, for example, you could use function with `def convert_temperature(original_temp: float, source_topic: str)` signature to access name of the topic the message was delivered to or `def convert_temperature(original_temp: float, source_topic: str, matches: Dict[str, Any])` to access the topic and the wildcard matches (if any). Arguments defined in the yaml file can be used as usual. 
 
 
 ### Routed messages
