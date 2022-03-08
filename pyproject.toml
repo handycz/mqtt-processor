@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mqttprocessor"
-version = "0.2.1"
+version = "0.2.2"
 description = "Customizable application that receives MQTT messages, filters or changes the message and re-sends it to another topic"
 authors = ["Ondřej Novák <onno.cz@gmail.com>"]
 license = "MIT"
