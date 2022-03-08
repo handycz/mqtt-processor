@@ -28,7 +28,7 @@ class SingleSourceProcessor:
         name: str,
         functions: List[ProcessorFunction],
         source_topic_rule: TopicName,
-        default_sink_topic: TopicName,
+        default_sink_topic: Optional[TopicName],
     ):
         self._logger = logging.getLogger(
             __name__ + "=" + name + "@" + source_topic_rule.rule
@@ -186,7 +186,7 @@ class Processor:
         name: str,
         functions: List[ProcessorFunction],
         sources: List[TopicName],
-        sink: TopicName,
+        sink: Optional[TopicName],
     ):
         self._logger = logging.getLogger(__name__ + "=" + name)
 
@@ -232,5 +232,5 @@ class ProcessorCreator:
             name=self._config.name,
             functions=create_functions(self._config.function),
             sources=[TopicName(source.__root__) for source in self._config.source],
-            sink=TopicName(self._config.sink.__root__),
+            sink=None if self._config.sink is None else TopicName(self._config.sink.__root__),
         )
