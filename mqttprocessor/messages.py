@@ -99,7 +99,7 @@ class TopicName:
             if group_id.startswith("W"):
                 rule = rule.replace("{{{0}}}".format(group_id), "#")
             else:
-                rule = rule.replace("{{{0}}}".format(group_id), "*")
+                rule = rule.replace("{{{0}}}".format(group_id), "+")
 
         return rule
 
