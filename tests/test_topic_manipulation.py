@@ -89,7 +89,7 @@ def test_pattern_to_mqtt_format():
         "device1/{w1}/foo{w2}/bar/{W10}/property"
     ).convert_rule_to_mqtt_format()
 
-    assert actual == "device1/*/foo*/bar/#/property"
+    assert actual == "device1/+/foo+/bar/#/property"
 
 
 def test_pattern_creator_match_single_level():
