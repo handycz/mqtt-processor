@@ -40,6 +40,7 @@ class SingleSourceProcessor:
     def process_message(
         self, actual_source_topic: str, message: MessageBody
     ) -> List[Message]:
+        self._logger.debug("Received message to topic %s", actual_source_topic)
         actual_source_topic = TopicName(actual_source_topic)
 
         matches = self._source_topic_rule.matches(actual_source_topic)

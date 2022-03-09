@@ -86,6 +86,8 @@ def _process_messages(processors: List[Processor], mqtt_client: Client):
 
     while True:
         received_message = _ingress_queue.get()
+        _logger.debug("Received message at %s", received_message.topic)
+
         for processor in processors:
             output_messages += processor.process_message(
                 received_message.topic, received_message.payload
@@ -93,6 +95,8 @@ def _process_messages(processors: List[Processor], mqtt_client: Client):
 
         while len(output_messages) > 0:
             msg = output_messages.pop()
+            _logger.debug("Sending message to %s", msg.sink_topic.rule)
+
             mqtt_client.publish(
                 msg.sink_topic.rule,
                 msg.message_body,
