@@ -43,7 +43,7 @@ def _load_env() -> EnvParameters:
             password=os.getenv("MQTT_PASSWORD"),
         ),
         config_file_path=os.getenv("CONFIG_FILE", "config.yaml"),
-        log_level=os.getenv("LOG_LEVEL", "WARNING")
+        log_level=os.getenv("LOG_LEVEL", "WARNING").upper()
     )
 
 
