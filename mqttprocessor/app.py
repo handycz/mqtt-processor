@@ -28,6 +28,7 @@ class EnvParameters:
 
     mqtt: Mqtt
     config_file_path: str
+    log_level: str
 
 
 def _load_env() -> EnvParameters:
@@ -42,6 +43,7 @@ def _load_env() -> EnvParameters:
             password=os.getenv("MQTT_PASSWORD"),
         ),
         config_file_path=os.getenv("CONFIG_FILE", "config.yaml"),
+        log_level=os.getenv("LOG_LEVEL", "WARNING")
     )
 
 
@@ -107,6 +109,7 @@ def _process_messages(processors: List[Processor], mqtt_client: Client):
 
 def run():
     env = _load_env()
+    logging.basicConfig(level=logging.getLevelName(env.log_level))
     processors = _create_processors(env.config_file_path)
     mqtt = _create_mqtt_client(processors, env.mqtt)
     _process_messages(processors, mqtt)
