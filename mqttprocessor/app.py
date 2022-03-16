@@ -60,10 +60,18 @@ def _create_mqtt_client(
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
             _logger.info("MQTT client connected!")
+            for processor in processors:
+                for topic in processor.source_topics:
+                    _logger.info("Subscribing to %s", topic.convert_rule_to_mqtt_format())
+                    client.subscribe(topic.convert_rule_to_mqtt_format())
         else:
             _logger.error("MQTT client connection failed with code %s", rc)
 
+    def on_disconnect(client, userdata, reason_code):
+        _logger.error("MQTT client disconnected: %s", reason_code)
+
     def on_message(client, userdata, message: MQTTMessage):
+        _logger.debug("Inserting message to the queue")
         _ingress_queue.put(message)
 
     client = Client(mqtt_config.client_id)
@@ -71,12 +79,9 @@ def _create_mqtt_client(
         client.username_pw_set(mqtt_config.username, mqtt_config.password)
 
     client.on_connect = on_connect
+    client.on_disconnect = on_disconnect
     client.connect(mqtt_config.host, mqtt_config.port)
     client.on_message = on_message
-
-    for processor in processors:
-        for topic in processor.source_topics:
-            client.subscribe(topic.convert_rule_to_mqtt_format())
 
     client.loop_start()
 
